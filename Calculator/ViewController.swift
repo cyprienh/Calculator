@@ -37,7 +37,26 @@ struct Message {
 
 struct AppVariables {
     static var digits = 4
+    static var bits = 16
     static var separator = 0
+    static var representation = 0
+}
+
+
+struct Constants {
+    static let SIGNED = 1
+    static let UNSIGNED = 0
+    static let COMMA = 1
+    static let DOT = 0
+    
+    static let NO_ERROR = 0
+    static let LOGIC_ERROR = 1
+    static let MATH_ERROR = 2
+    static let CONVERSION_ERROR = 3
+    static let NAME_ERROR = 4
+    static let FUNCTION_DEFINED = 5
+    static let BINARY_OVERFLOW_ERROR = 6
+    static let REPRESENTATION_ERROR = 7
 }
 
 struct CalcElement {
@@ -47,6 +66,7 @@ struct CalcElement {
     var complex: Complex<Double> = Complex(0, 0)
     //var value: Double
     var range: NSRange
+    var error: Int = 0  // No error by default
 }
 
 struct ColorElement {
@@ -66,7 +86,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
     var prev_lines: [String] = []                   // Contains the test of each line, before the new modification, for comparison
     var prev_results: [String] = []                 // Contains the results of the last modification, if prev_lines[i] == lines[i] then results[i] = prev_results[i] i guess
     var results: [String] = []                      // Results of the calculation of each line -> probably should be more than just a string ?
-    var messages: [Message] = []                    // To output something other than the result: error, ...
     var variables: [CalcVariable] = []              // List of user defined variables; a=2
     var funcs: [CalcFunctions] = []                 // List of user defined functions; f(x)=4x
     var contains_func_var: [Bool] = []                  // If line i contains function OR VARIABLE
@@ -103,6 +122,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
         AppVariables.separator = defaults.integer(forKey: "Separator")
         if isKeyPresentInUserDefaults(key: "Digits") {
             AppVariables.digits = defaults.integer(forKey: "Digits")
+        }
+        if isKeyPresentInUserDefaults(key: "Bits") {
+            AppVariables.bits = defaults.integer(forKey: "Bits")
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(updateCalculatorNotification), name: Notification.Name(rawValue: "updateCalculator"), object: nil)
@@ -218,7 +240,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         factors_range = []
         lines_color = []
 
-        //var line_index = 0
+        var line_index = 0
         
         for i in 0...lines.count-1 {                    // Prepare the arrays for new line
             results.append("")                          // One (empty for now) result per line
@@ -230,8 +252,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 lines_color.append([])
             }
         }
-        
-        print(contains_func_var)
         
         for f in func_var_defs {                        // For each variable/function defined, check if said definition still exists
                                                         // Delete function/variable if doesn't exist -- Should also remove from func_var_defs ?
@@ -262,50 +282,14 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 }
             }
             
-            var calc: [CalcElement] = []            // THE array containing the parsing result and the calculations
-            var values: [CalcElement] = []
             
-            var lastIndex = 0
-            var type = -1
-            var current = ""
-            var range_2 = NSMakeRange(0, 0)
+            var calc: [CalcElement] = []            // THE array containing the parsing result and the calculations
             
             if lines[l].count > 0 {                 // If line isn't empty
-                for i in 0...lines[l].count-1 {     // For each char in line
-                    let char = String(lines[l][lines[l].index(lines[l].startIndex, offsetBy: i)])
-                    if shouldChange(char: char, type: type) {       // If char if of new type: i-1 -> "1" & i -> "+" => true
-                        if current != "" {                          // First char should always change byt let's not add nothing to values
-                            values.append(CalcElement(string: current, range: range_2))
-                        }
-                        lastIndex = i
-                        
-                        if char == " " {
-                            type = 0
-                        } else if char.isDouble {
-                            type = 1
-                        }  else if char.isOperator {
-                            type = 3
-                        }  else {
-                            type = 2
-                        }
-                    }
-                    let start = lines[l].index(lines[l].startIndex, offsetBy: lastIndex)            // Kinda stupid to redefine the starting index every time
-                    let end = lines[l].index(lines[l].endIndex, offsetBy: -(lines[l].count-i-1))
-                    let range = start..<end
-                    range_2 = NSMakeRange(/*line_index+*/lastIndex, i+1-lastIndex)
-
-                    let substr = String(lines[l][range])
-                    current = substr
-                }
-                if current != "" {          // If all line is same type, append everything at the end
-                    values.append(CalcElement(string: current, range: range_2))
-                }
-                calc = values               // Initial calc is done for this line, yay
+                calc = parseLine(lines[l], line_index)
             }
-            
-            messages = []
-            
-            if calc.count > 0 {
+                        
+            if calc.count > 0 {                     // Coloring needs to be done every time (maybe the others don't tho?)
                 lines_color.append([])
                 doNumber(calc: &calc)
                 doDotSeparation(calc: &calc)
@@ -318,13 +302,14 @@ class ViewController: NSViewController, NSTextViewDelegate {
             
             if !already {
                 if calc.count > 0 {
-                    if !isComplex(calc: &calc) {
+                    if !isComplex(calc: &calc) {            // Do the actual math
                         doUnits(calc: &calc)
                         if !doFunctionsDeclaration(calc: &calc, line: l) {
                             doParenthesis(calc: &calc, 0)
                             doVariablesReplacement(calc: &calc, line: l)
                             doFunctionsReplacement(calc: &calc, line: l)
                             doConstants(calc: &calc)
+                            doParenthesis(calc: &calc, 0)
                             doGreekLetters(calc: &calc)
                             doDegRad(calc: &calc)
                             doParenthesis(calc: &calc, 0)
@@ -334,44 +319,18 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doCurrencyConversions(calc: &calc)
                             doVariablesDefinition(calc: &calc, line: l)
                         }
-                    } else {
+                    } else {                                // Do Complex math (not quite the same)
                         if !doFunctionsDeclaration(calc: &calc, line: l) {
                             doConstants(calc: &calc)
                             doComplex(calc: &calc)
                         }
                     }
-                    if messages.count == 1 {
-                        results[l] = messages[0].content
-                    } else if messages.count > 1 {
-                        results[l] = "Error"
-                    } else {
-                        if calc.count == 1 {
-                            if calc[0].isComplex {
-                                results[l] = calc[0].complex.toString
-                            } else {
-                                if calc[0].string.isNumber {
-                                    results[l] = toSystem(system: calc[0].string.system, result: String(calc[0].string.toNumber))
-                                    if calc[0].hasUnit {
-                                        results[l] += " "
-                                        for (i, u) in calc[0].unit.enumerated() {
-                                            if u.factor != 0 {
-                                                results[l] += u.prefix.symbol+u.unit.symbol
-                                                if u.factor != 1 {
-                                                    let factor_string = String(format: "%g", u.factor)
-                                                    factors_range[l].append(NSMakeRange(results[l].count, factor_string.count))
-                                                    results[l] += factor_string
-                                                }
-                                                if i < calc[0].unit.count-1 {
-                                                    results[l] += "."
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    results[l] = calc[0].string
-                                }
-                            }
-                        } else if calc.count > 0 && calc[0].string.isNumber {
+                    if calc.count == 1 {        // If the final calc is of length one, then it's "valid"
+                        if calc[0].error != Constants.NO_ERROR {
+                            results[l] = getErrorMessage(calc[0].error)
+                        } else if calc[0].isComplex {
+                            results[l] = calc[0].complex.toString
+                        } else if calc[0].string.isNumber {
                             results[l] = toSystem(system: calc[0].string.system, result: String(calc[0].string.toNumber))
                             if calc[0].hasUnit {
                                 results[l] += " "
@@ -390,14 +349,34 @@ class ViewController: NSViewController, NSTextViewDelegate {
                                 }
                             }
                         } else {
-                            results[l] = ""
+                            results[l] = calc[0].string
                         }
+                    } else if calc.count > 0 && calc[0].string.isNumber {
+                        results[l] = toSystem(system: calc[0].string.system, result: String(calc[0].string.toNumber))
+                        if calc[0].hasUnit {
+                            results[l] += " "
+                            for (i, u) in calc[0].unit.enumerated() {
+                                if u.factor != 0 {
+                                    results[l] += u.prefix.symbol+u.unit.symbol
+                                    if u.factor != 1 {
+                                        let factor_string = String(format: "%g", u.factor)
+                                        factors_range[l].append(NSMakeRange(results[l].count, factor_string.count))
+                                        results[l] += factor_string
+                                    }
+                                    if i < calc[0].unit.count-1 {
+                                        results[l] += "."
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        results[l] = ""
                     }
                 } else {
                     results[l] = ""
                 }
             }
-            //line_index += lines[l].count+1
+            line_index += lines[l].count+1
         }
         
         InputField.textStorage!.removeAttribute(NSAttributedString.Key.foregroundColor, range: NSMakeRange(0, str.count))
@@ -447,13 +426,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 }
             }
         }
-    }
-    
-    func shouldChange(char: String, type: Int) -> Bool {
-        return (char.isDouble && type != 1)
-                    || (char.isOperator && (type != 3))
-                    || (char == " " && type != 0)
-                    || (!char.isDouble && !char.isOperator && char != " " && type != 2)
     }
     
     func doComments(calc: inout [CalcElement], line: Int) {
@@ -529,7 +501,8 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 var first = [calc[0]]
                 let ucalc = findUnit(calc: &first, start: 0)
                 if Units.contains(where: { $0.symbol == calc[0].string}) || constants.contains(calc[0].string) || funcs.contains(where: { $0.name == calc[0].string}) || (variables.contains(where: { $0.name == calc[0].string}) && variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line != line) || ucalc.hasUnit {
-                    messages.append(Message(type: 1, line: line, content: "Name already used"))
+                    setError(calc: &calc, error: Constants.NAME_ERROR)
+                    return
                 } else {
                     if variables.filter({$0.name == calc[0].string}).count == 0 {
                         variables.append(CalcVariable(name: calc[0].string, value: Double(calc[2].string.toNumber), line: line, unit: calc[2].unit))
@@ -567,14 +540,13 @@ class ViewController: NSViewController, NSTextViewDelegate {
     }
     
     func doFunctionsDeclaration(calc: inout [CalcElement], line: Int) -> Bool {
-        var r = false
         if calc.count >= 5 {
             if calc[2].string.isText && calc[2].string.count == 1 && calc[0].string.isText /*&& calc[0].string.count == 1*/  && calc[1].string == "(" &&
                 calc.count >= 6 && calc[3].string == ")" && calc[4].string.starts(with: "=")  {
                 var first = [calc[0]]
                 let ucalc = findUnit(calc: &first, start: 0)
                 if Units.contains(where: { $0.symbol == calc[0].string}) || constants.contains(calc[0].string) || variables.contains(where: { $0.name == calc[0].string}) || (funcs.contains(where: { $0.name == calc[0].string}) && func_var_defs[func_var_defs.firstIndex(where: {$0.name == calc[0].string }) ?? 0].line != line) || ucalc.hasUnit {
-                    messages.append(Message(type: 1, line: line, content: "Name already used"))
+                    setError(calc: &calc, error: Constants.NAME_ERROR)
                 } else {
                     let n = calc[0].string
                     let v = calc[2].string
@@ -589,27 +561,21 @@ class ViewController: NSViewController, NSTextViewDelegate {
                     
                     if funcs.filter({$0.name == n}).count == 0 {
                         funcs.append(CalcFunctions(name: n, variable: v, calc: calc))
-                        messages.append(Message(type: 0, line: line, content: "Function defined"))
                         lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0xFFA500, alpha: 1.0), range: range))
+                        setError(calc: &calc, error: Constants.FUNCTION_DEFINED)
                     } else {
-                        /*funcs[funcs.firstIndex(where: {$0.name == n}) ?? 0].variable = v
-                        funcs[funcs.firstIndex(where: {$0.name == n}) ?? 0].calc = calc*/
                         if func_var_defs[func_var_defs.firstIndex(where: {$0.name == n}) ?? 0].line == line {
                             funcs[funcs.firstIndex(where: {$0.name == n}) ?? 0].variable = v
                             funcs[funcs.firstIndex(where: {$0.name == n}) ?? 0].calc = calc
-                            messages.append(Message(type: 0, line: line, content: "Function defined"))
-                        } /*else {
-                            messages.append(Message(type: 0, line: line, content: "Function redefined"))
-                            lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0xFFA500, alpha: 1.0), range: range))
-                        }*/
+                            setError(calc: &calc, error: Constants.FUNCTION_DEFINED)
+                        }
                     }
                     func_var_defs.append(CalcFunctionsDef(name: n, line: line))
-                    calc.removeAll()
-                    r = true
+                    return true
                 }
             }
         }
-        return r
+        return false
     }
     
     func removeUseless(calc: inout [CalcElement]) {
@@ -806,4 +772,23 @@ func buildImportOpenPanel() -> NSOpenPanel {
     let openPanel = NSOpenPanel()
     openPanel.prompt = "Import"
     return openPanel
+}
+
+func setError(calc: inout [CalcElement], error: Int) {
+    calc = [CalcElement(string: "", range: NSMakeRange(0, 0), error: error)]
+}
+
+func getErrorMessage(_ error: Int) -> String {
+    switch error {
+        case Constants.NAME_ERROR:
+            return "Name already used!"
+        case Constants.FUNCTION_DEFINED:
+            return "Function defined!"
+        case Constants.BINARY_OVERFLOW_ERROR:
+            return "Number too big!"
+        case Constants.REPRESENTATION_ERROR:
+            return "Number can't be represented!"
+        default:
+            return "Error!"
+    }
 }

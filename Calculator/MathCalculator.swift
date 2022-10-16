@@ -18,6 +18,10 @@ func doMath(calc: inout [CalcElement]) {
     doMultDiv(calc: &calc)
     doPlusMinus(calc: &calc)
     doBitShifts(calc: &calc)
+    doNOT(calc: &calc)
+    doAND(calc: &calc)
+    doOR(calc: &calc)
+    doXOR(calc: &calc)
     doDivisionRest(calc: &calc)
 }
 
@@ -165,29 +169,6 @@ func doPlusMinus(calc: inout [CalcElement]) {
                 calc.remove(at: i+1)
                 calc.remove(at: i)
                 i-=1
-            }
-        }
-        i+=1
-    }
-}
-
-func doBitShifts(calc: inout [CalcElement]) {
-    var i = 1
-    while i < calc.count-1 {
-        if calc[i].string == ">>" || calc[i].string == "<<" {
-            if calc[i-1].string.isNumber && calc[i+1].string.isNumber {
-                let left = Int(calc[i-1].string.toNumber)
-                let right = Int(calc[i+1].string.toNumber)
-                if calc[i].string == ">>" {
-                    calc[i].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left >> right))
-                } else if calc[i].string == "<<" {
-                    calc[i].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left << right))
-                }
-                calc.remove(at: i+1)
-                calc.remove(at: i-1)
-                i=i-1
             }
         }
         i+=1

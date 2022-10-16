@@ -23,6 +23,7 @@
 		464C983A26FE5682003BDE40 /* MathCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464C983926FE5682003BDE40 /* MathCalculator.swift */; };
 		464C983C26FE5737003BDE40 /* NumeralSystems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464C983B26FE5737003BDE40 /* NumeralSystems.swift */; };
 		464D9F6A28FAD15C0068265E /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464D9F6928FAD15C0068265E /* Parser.swift */; };
+		464D9F6C28FC020B0068265E /* LogicCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464D9F6B28FC020B0068265E /* LogicCalculator.swift */; };
 		467FDA992715EA45004236A1 /* CalcTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467FDA982715EA45004236A1 /* CalcTextView.swift */; };
 		46AF03A42703F9A00069E73D /* PreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46AF03A32703F9A00069E73D /* PreferencesController.swift */; };
 		46D062FF26FCC69E007BB377 /* ComplexModule in Frameworks */ = {isa = PBXBuildFile; productRef = 46D062FE26FCC69E007BB377 /* ComplexModule */; };
@@ -72,6 +73,7 @@
 		464C983926FE5682003BDE40 /* MathCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathCalculator.swift; sourceTree = "<group>"; };
 		464C983B26FE5737003BDE40 /* NumeralSystems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumeralSystems.swift; sourceTree = "<group>"; };
 		464D9F6928FAD15C0068265E /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		464D9F6B28FC020B0068265E /* LogicCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicCalculator.swift; sourceTree = "<group>"; };
 		467FDA982715EA45004236A1 /* CalcTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcTextView.swift; sourceTree = "<group>"; };
 		46AF03A32703F9A00069E73D /* PreferencesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesController.swift; sourceTree = "<group>"; };
 		46D08BE52707B055005AA4CD /* CalculatorWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorWindow.swift; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 				464D9F6928FAD15C0068265E /* Parser.swift */,
 				464C983926FE5682003BDE40 /* MathCalculator.swift */,
 				464C983526FE5599003BDE40 /* ComplexCalculator.swift */,
+				464D9F6B28FC020B0068265E /* LogicCalculator.swift */,
 				464C983B26FE5737003BDE40 /* NumeralSystems.swift */,
 				464C983726FE5625003BDE40 /* Extensions.swift */,
 				4614E47E270F50DE009B6F0F /* UnitsCollection.swift */,
@@ -245,7 +248,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1300;
+				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					462D525726EAD20A00937620 = {
 						CreatedOnToolsVersion = 12.5;
@@ -326,6 +329,7 @@
 				462D525C26EAD20A00937620 /* AppDelegate.swift in Sources */,
 				462CC2CB2860AA5600AC66F4 /* WindowController.swift in Sources */,
 				462CC2C92860A23800AC66F4 /* Document.swift in Sources */,
+				464D9F6C28FC020B0068265E /* LogicCalculator.swift in Sources */,
 				464C983826FE5625003BDE40 /* Extensions.swift in Sources */,
 				46AF03A42703F9A00069E73D /* PreferencesController.swift in Sources */,
 				464C983C26FE5737003BDE40 /* NumeralSystems.swift in Sources */,
@@ -409,6 +413,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -470,6 +475,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -500,6 +506,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = JKZRFXZ3K8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Calculator/Info.plist;
@@ -523,6 +530,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = JKZRFXZ3K8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Calculator/Info.plist;
@@ -543,6 +551,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = JKZRFXZ3K8;
 				INFOPLIST_FILE = CalculatorTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -565,6 +574,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = JKZRFXZ3K8;
 				INFOPLIST_FILE = CalculatorTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -586,6 +596,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = JKZRFXZ3K8;
 				INFOPLIST_FILE = CalculatorUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -606,6 +617,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = JKZRFXZ3K8;
 				INFOPLIST_FILE = CalculatorUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

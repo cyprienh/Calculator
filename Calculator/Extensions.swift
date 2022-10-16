@@ -21,7 +21,7 @@ extension String {
         return (input != ".") && (input.isDouble || input.prefix(2) == "0x" || input.prefix(2) == "0b")
     }
     var isHex: Bool { return filter(\.isHexDigit).count == count }
-    var isOperator: Bool { return self == "*" || self == "/" || self == "+" || self == "-" || self == "^" || self == "(" || self == ")" || self == "=" || self == ">" || self == "<" || self == "%" || self == "|" }
+    var isOperator: Bool { return self == "*" || self == "/" || self == "+" || self == "-" || self == "^" || self == "(" || self == ")" || self == "=" || self == ">" || self == "<" || self == "%" || self == "|" || self == "!" }
     var isText: Bool { return !self.isNumber && !self.isOperator && self != " " && self != "i" && self != "|" }
     var isBin: Bool {
         guard self.count > 0 else { return false }
@@ -196,3 +196,25 @@ extension String {
         return String(self[start ..< end])
     }
 }
+
+extension Int {
+    static prefix func ! (x: Int) -> Int {
+        return Int(pow(Double(2), Double(AppVariables.bits))) - x - 1
+    }
+    
+    static func ^ (left: Int, right: Int) -> Int {
+        return ((left & !right) | (!left & right))
+    }
+}
+ /*
+  
+  0b000 0b111 7
+  0b001 0b110 6
+  0b010 0b101 5
+  0b011
+  0b100
+  0b101
+  0b110
+  0b111
+  
+  */

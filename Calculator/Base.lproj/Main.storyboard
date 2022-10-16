@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="20037" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21225" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="20037"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21225"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -470,7 +470,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="1PS-Z7-m7X">
-                                <rect key="frame" x="18" y="192" width="137" height="18"/>
+                                <rect key="frame" x="18" y="199" width="137" height="18"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Decimal Separator:" id="dmy-cb-lOB">
                                     <font key="font" size="12" name="FiraCode-Regular"/>
                                     <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -491,17 +491,17 @@
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="KzO-h9-6DV">
-                                <rect key="frame" x="18" y="169" width="108" height="18"/>
+                                <rect key="frame" x="18" y="176" width="108" height="18"/>
                                 <buttonCell key="cell" type="radio" title="Comma ( , )" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="hk4-Og-kXr">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" size="12" name="FiraCode-Regular"/>
                                 </buttonCell>
                                 <connections>
-                                    <action selector="DecimalSeparator:" target="jAt-ds-3Ao" id="xzX-Ea-Hil"/>
+                                    <action selector="DecimalSeparator:" target="jAt-ds-3Ao" id="k7J-CA-SKT"/>
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="U3C-cl-0et">
-                                <rect key="frame" x="187" y="169" width="93" height="18"/>
+                                <rect key="frame" x="187" y="176" width="93" height="18"/>
                                 <buttonCell key="cell" type="radio" title="Dot ( . )" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="bPN-pZ-0Pd">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" size="12" name="FiraCode-Regular"/>
@@ -510,24 +510,86 @@
                                     <action selector="DecimalSeparator:" target="jAt-ds-3Ao" id="VA4-af-qGE"/>
                                 </connections>
                             </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="08v-I6-FqV">
+                                <rect key="frame" x="18" y="128" width="41" height="18"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Bits:" id="5jN-Wd-7VA">
+                                    <font key="font" size="12" name="FiraCode-Regular"/>
+                                    <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="wML-C8-6B1">
+                                <rect key="frame" x="67" y="125" width="40" height="24"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="24" id="2C3-9B-GYK"/>
+                                    <constraint firstAttribute="width" constant="40" id="GRC-zK-GbQ"/>
+                                </constraints>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" usesSingleLineMode="YES" id="NVe-1C-Nct">
+                                    <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="GM6-cY-l6m"/>
+                                    <font key="font" size="13" name="FiraCode-Regular"/>
+                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Kc5-go-hCi">
+                                <rect key="frame" x="18" y="95" width="115" height="18"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Representation:" id="zEz-53-hTH">
+                                    <font key="font" size="12" name="FiraCode-Regular"/>
+                                    <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="lB6-qa-hAg">
+                                <rect key="frame" x="18" y="72" width="86" height="18"/>
+                                <buttonCell key="cell" type="radio" title="Unsigned" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="VBN-Ue-Y8U">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" size="12" name="FiraCode-Regular"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="Representation:" target="jAt-ds-3Ao" id="I6O-I0-xqY"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="W8g-tW-aGb">
+                                <rect key="frame" x="209" y="72" width="71" height="18"/>
+                                <buttonCell key="cell" type="radio" title="Signed" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="Ihf-qu-ynG">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" size="12" name="FiraCode-Regular"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="Representation:" target="jAt-ds-3Ao" id="znu-gL-NBX"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="Kc5-go-hCi" firstAttribute="leading" secondItem="lB6-qa-hAg" secondAttribute="leading" id="6Vd-tW-d97"/>
                             <constraint firstItem="DaJ-nu-8d3" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="886-tG-brz"/>
+                            <constraint firstItem="W8g-tW-aGb" firstAttribute="top" secondItem="Kc5-go-hCi" secondAttribute="bottom" constant="5" id="BYG-vY-HWl"/>
+                            <constraint firstItem="Kc5-go-hCi" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="BtB-eP-1Vi"/>
+                            <constraint firstItem="lB6-qa-hAg" firstAttribute="top" secondItem="Kc5-go-hCi" secondAttribute="bottom" constant="5" id="Exb-ql-z4X"/>
                             <constraint firstItem="Q6U-yU-QAk" firstAttribute="centerY" secondItem="DaJ-nu-8d3" secondAttribute="centerY" id="Glr-KC-DSW"/>
+                            <constraint firstItem="wML-C8-6B1" firstAttribute="centerY" secondItem="08v-I6-FqV" secondAttribute="centerY" id="IkC-av-VOP"/>
                             <constraint firstItem="1PS-Z7-m7X" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="Ltl-EX-ejy"/>
+                            <constraint firstItem="1PS-Z7-m7X" firstAttribute="top" secondItem="DaJ-nu-8d3" secondAttribute="bottom" constant="15" id="Og5-Pq-hkB"/>
+                            <constraint firstAttribute="trailing" secondItem="W8g-tW-aGb" secondAttribute="trailing" constant="20" id="P0H-pj-Xbv"/>
+                            <constraint firstItem="08v-I6-FqV" firstAttribute="top" secondItem="KzO-h9-6DV" secondAttribute="bottom" constant="30" id="ToT-VN-wsE"/>
                             <constraint firstAttribute="trailing" secondItem="U3C-cl-0et" secondAttribute="trailing" constant="20" id="UTM-ed-jzX"/>
-                            <constraint firstItem="1PS-Z7-m7X" firstAttribute="top" secondItem="tjm-66-JpT" secondAttribute="top" constant="60" id="ZXF-UK-USP"/>
+                            <constraint firstItem="08v-I6-FqV" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="hcS-bk-tep"/>
+                            <constraint firstItem="1PS-Z7-m7X" firstAttribute="leading" secondItem="KzO-h9-6DV" secondAttribute="leading" id="hqR-Sr-m9q"/>
+                            <constraint firstItem="wML-C8-6B1" firstAttribute="leading" secondItem="08v-I6-FqV" secondAttribute="trailing" constant="10" id="kJ0-Dq-55M"/>
                             <constraint firstItem="KzO-h9-6DV" firstAttribute="top" secondItem="1PS-Z7-m7X" secondAttribute="bottom" constant="5" id="lbK-PN-cLh"/>
+                            <constraint firstItem="Kc5-go-hCi" firstAttribute="top" secondItem="08v-I6-FqV" secondAttribute="bottom" constant="15" id="ldG-IT-Ymr"/>
                             <constraint firstItem="U3C-cl-0et" firstAttribute="top" secondItem="1PS-Z7-m7X" secondAttribute="bottom" constant="5" id="suQ-YB-NYz"/>
                             <constraint firstItem="Q6U-yU-QAk" firstAttribute="leading" secondItem="DaJ-nu-8d3" secondAttribute="trailing" constant="10" id="uYa-A9-fSf"/>
-                            <constraint firstItem="KzO-h9-6DV" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="ucB-i2-Izn"/>
                             <constraint firstItem="DaJ-nu-8d3" firstAttribute="top" secondItem="tjm-66-JpT" secondAttribute="top" constant="20" id="zWB-I6-qIf"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="BitsInput" destination="wML-C8-6B1" id="WSB-bO-dEL"/>
                         <outlet property="CommaSeparator" destination="KzO-h9-6DV" id="hpv-1w-iy3"/>
                         <outlet property="DigitsInput" destination="Q6U-yU-QAk" id="Hj7-Ni-Ktb"/>
                         <outlet property="DotSeparator" destination="U3C-cl-0et" id="3LF-Uv-zeP"/>
+                        <outlet property="Signed" destination="W8g-tW-aGb" id="Xaf-7a-sE8"/>
+                        <outlet property="Unsigned" destination="lB6-qa-hAg" id="FfV-9x-l9Q"/>
                     </connections>
                 </viewController>
                 <customObject id="nCx-Xs-HrN" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

@@ -61,21 +61,33 @@ func doConversions(calc: inout [CalcElement]) {
     while i < calc.count {
         if i > 0 && i < calc.count-1 && (calc[i].string == "in" || calc[i].string == "to") {
             var result = ""
-            switch calc[i+1].string {
+            var x = Int(calc[i-1].string.toNumber)
+            let max = Int(pow(Double(2), Double(AppVariables.bits)))
+            if (AppVariables.representation == Constants.SIGNED && x >= (-max/2) && x < (max/2))
+                || (AppVariables.representation == Constants.UNSIGNED && x >= 0 && x < max) {
+                if AppVariables.representation == Constants.SIGNED && x < 0 {
+                    x = max + x
+                }
+                switch calc[i+1].string {
                 case "dec":
                     result = String(Int(calc[i-1].string.toNumber), radix: 10)
                 case "hex":
-                    result = "0x"+String(Int(calc[i-1].string.toNumber), radix: 16)
+                    result = "0x"+String(x, radix: 16)
                 case "bin":
-                    result = "0b"+String(Int(calc[i-1].string.toNumber), radix: 2)
+                    result = "0b"+String(x, radix: 2)
                 default:
                     result = ""
+                }
             }
+            
             if result != "" {
                 calc[i].string = result
                 calc.remove(at: i+1)
                 calc.remove(at: i-1)
                 i-=1
+            } else {
+                setError(calc: &calc, error: Constants.REPRESENTATION_ERROR)
+                return
             }
         }
         i+=1

@@ -2,12 +2,19 @@
 import Cocoa
 import Numerics
 
-func parseLine(_ line: String) -> [CalcElement] {
+/// Parse content of line (convert string to [CalcElement])
+/// - Parameters:
+///     - line: the current line to parse
+/// - Returns: the [CalcElement] with each "type" separated
+func parseLine(_ line: String, _ index: Int) -> [CalcElement] {
     var values: [CalcElement] = []
     var lastIndex = 0
     var type = -1
     var current = ""
     var range_2 = NSMakeRange(0, 0)
+    
+    var start: String.Index = line.index(line.startIndex, offsetBy: lastIndex)
+    var end: String.Index
     
     for i in 0...line.count-1 {     // For each char in line
         let char = String(line[line.index(line.startIndex, offsetBy: i)])
@@ -26,11 +33,12 @@ func parseLine(_ line: String) -> [CalcElement] {
             }  else {
                 type = 2
             }
+            start = line.index(line.startIndex, offsetBy: lastIndex)
         }
-        let start = line.index(line.startIndex, offsetBy: lastIndex)            // Kinda stupid to redefine the starting index every time
-        let end = line.index(line.endIndex, offsetBy: -(line.count-i-1))
+        
+        end = line.index(line.endIndex, offsetBy: -(line.count-i-1))
         let range = start..<end
-        range_2 = NSMakeRange(lastIndex, i+1-lastIndex)
+        range_2 = NSMakeRange(index+lastIndex, i+1-lastIndex)
 
         let substr = String(line[range])
         current = substr
@@ -43,7 +51,7 @@ func parseLine(_ line: String) -> [CalcElement] {
 
 func shouldChange(char: String, type: Int) -> Bool {
     return (char.isDouble && type != 1)
-                || (char.isOperator && (type != 3))
-                || (char == " " && type != 0)
-                || (!char.isDouble && !char.isOperator && char != " " && type != 2)
+            || (char.isOperator && (type != 3))
+            || (char == " " && type != 0)
+            || (!char.isDouble && !char.isOperator && char != " " && type != 2)
 }
