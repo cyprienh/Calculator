@@ -59,9 +59,13 @@ func doPower(calc: inout [CalcElement], _ start: Int) {
 func doNegative(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count-1 {
-        if calc[i].string == "-" && calc[i+1].string.isNumber {
-            if i == 0 || !calc[i-1].string.isNumber {
-                calc[i+1].string = calc[i].string+calc[i+1].string
+        if calc[i].string == "-" && calc[i+1].hasValue {
+            if i == 0 || !calc[i-1].hasValue {
+                if calc[i+1].isInteger {
+                    calc[i+1].integer = -calc[i+1].integer
+                } else {
+                    calc[i+1].real = -calc[i+1].real
+                }
                 calc.remove(at: i)
                 i-=1
             }
@@ -73,11 +77,13 @@ func doNegative(calc: inout [CalcElement]) {
 func doFactorial(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count {
-        if calc[i].string == "!" && calc[i-1].string.isNumber {
-            calc[i].string = toSystem(system: calc[i-1].string.system,
-                                      result: String(fact(Int(calc[i-1].string.toNumber))))
-            calc.remove(at: i-1)
-            i-=1
+        if calc[i].string == "!" && calc[i-1].hasValue {
+            if calc[i-1].isInteger {
+                calc[i].integer = fact(calc[i-1].integer)
+                calc[i].isInteger = true
+                calc.remove(at: i-1)
+                i-=1
+            }
         }
         i+=1
     }
@@ -86,11 +92,17 @@ func doFactorial(calc: inout [CalcElement]) {
 func doImplicit(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count-1 {
-        if calc[i].string.isNumber && calc[i+1].string.isNumber {
-            let left = Double(calc[i].string.toNumber)
-            let right = Double(calc[i+1].string.toNumber)
-            calc[i].string = toSystem(system: calc[i].string.system,
-                                      result: String(left*right))
+        if calc[i].hasValue && calc[i+1].hasValue {
+            if calc.isInteger {
+                let left = calc[i].integer
+                let right = calc[i+1].integer
+                calc[i] = CalcElement(string: "", unit: calc[i].unit, isInteger: true, integer: left*right, range: calc[i].range)
+            } else {
+                let left = calc[i].getDouble
+                let right = calc[i+1].getDouble
+                calc[i] = CalcElement(string: "", unit: calc[i].unit, isReal: true, real: left*right, range: calc[i].range)
+            }
+
             for u in calc[i+1].unit {
                 calc[i].unit.append(u)
             }
@@ -105,20 +117,40 @@ func doMultDiv(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count-1 {
         if calc[i].string == "*" || calc[i].string == "/" {
-            if calc[i-1].string.isNumber && calc[i+1].string.isNumber {
-                let left = Double(calc[i-1].string.toNumber)
-                let right = Double(calc[i+1].string.toNumber)
+            if calc[i-1].hasValue && calc[i+1].hasValue {
                 if calc[i].string == "*" {
-                    calc[i-1].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left*right))
+                    if calc.isInteger {
+                        let left = calc[i-1].integer
+                        let right = calc[i+1].integer
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left*right, range: calc[i-1].range)
+                    } else {
+                        let left = calc[i-1].getDouble
+                        let right = calc[i+1].getDouble
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left*right, range: calc[i-1].range)
+                    }
                     if calc[i+1].hasUnit {
                         for u in calc[i+1].unit {
                             calc[i-1].unit.append(u)
                         }
                     }
                 } else if calc[i].string == "/" {
-                    calc[i-1].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left/right))
+                    if calc.isInteger {
+                        let left = calc[i-1].integer
+                        let right = calc[i+1].integer
+                        if right != 0 {
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left/right, range: calc[i-1].range)
+                        } else {
+                            calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                        }
+                    } else {
+                        let left = calc[i-1].getDouble
+                        let right = calc[i+1].getDouble
+                        if right != 0 {
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left/right, range: calc[i-1].range)
+                        } else {
+                            calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                        }
+                    }
                     if calc[i+1].hasUnit {
                         for u in calc[i+1].unit {
                             calc[i-1].unit.append(Unit(unit: u.unit, prefix: u.prefix, factor: -u.factor))
@@ -139,31 +171,37 @@ func doPlusMinus(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count-1 {
         if calc[i].string == "+" || calc[i].string == "-" {
-            if calc[i-1].string.isNumber && calc[i+1].string.isNumber {
-                var left = Double(calc[i-1].string.toNumber)
-                var right = Double(calc[i+1].string.toNumber)
-                if calc[i-1].hasUnit && calc[i+1].hasUnit && sameUnit(calc[i-1], calc[i+1]) {
-                    var factor1: Double = 0
-                    var factor2: Double = 0
-                    for j in 0...calc[i-1].unit.count-1{
-                        factor1 += calc[i-1].unit[j].factor * Double(calc[i-1].unit[j].prefix.factor)
-                        factor2 += calc[i+1].unit[j].factor * Double(calc[i+1].unit[j].prefix.factor)
-                    }
-                    if factor2 >= factor1 {
-                        right *= pow(10, Double(factor2-factor1))
-                    } else {
-                        left *= pow(10, Double(factor1-factor2))
-                        calc[i-1].unit = calc[i+1].unit
-                    }
-                } else {
-                    calc[i-1].unit = []
-                }
+            if calc[i-1].hasValue && calc[i+1].hasValue {
                 if calc[i].string == "+" {
-                    calc[i-1].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left+right))
+                    if calc.isInteger {
+                        let left = calc[i-1].integer
+                        let right = calc[i+1].integer
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left+right, range: calc[i-1].range)
+                    } else {
+                        let left = calc[i-1].getDouble
+                        let right = calc[i+1].getDouble
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left+right, range: calc[i-1].range)
+                    }
+                    if calc[i+1].hasUnit {
+                        for u in calc[i+1].unit {
+                            calc[i-1].unit.append(u)
+                        }
+                    }
                 } else if calc[i].string == "-" {
-                    calc[i-1].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left-right))
+                    if calc.isInteger {
+                        let left = calc[i-1].integer
+                        let right = calc[i+1].integer
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left-right, range: calc[i-1].range)
+                    } else {
+                        let left = calc[i-1].getDouble
+                        let right = calc[i+1].getDouble
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left-right, range: calc[i-1].range)
+                    }
+                    if calc[i+1].hasUnit {
+                        for u in calc[i+1].unit {
+                            calc[i-1].unit.append(Unit(unit: u.unit, prefix: u.prefix, factor: -u.factor))
+                        }
+                    }
                 }
                 arrangeUnits(&calc[i-1])
                 calc.remove(at: i+1)
@@ -180,15 +218,22 @@ func doDivisionRest(calc: inout [CalcElement]) {
     while i < calc.count-1 {
         if calc[i].string == "%" {
             if calc[i-1].string.isNumber && calc[i+1].string.isNumber {
-                let left = Double(calc[i-1].string.toNumber)
-                let right = Double(calc[i+1].string.toNumber)
-                
-                if calc[i-1].string.isDouble || calc[i+1].string.isDouble {
-                    calc[i].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(left.truncatingRemainder(dividingBy: right)))
+                if calc.isInteger {
+                    let left = calc[i-1].integer
+                    let right = calc[i+1].integer
+                    if right != 0 {
+                        calc[i] = CalcElement(string: "", isInteger: true, integer: left % right, range: calc[i].range)
+                    } else {
+                        calc[i] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                    }
                 } else {
-                    calc[i].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(Int(left) % Int(right)))
+                    let left = calc[i-1].getDouble
+                    let right = calc[i+1].getDouble
+                    if right != 0 {
+                        calc[i] = CalcElement(string: "", isReal: true, real: left.truncatingRemainder(dividingBy: right), range: calc[i].range)
+                    } else {
+                        calc[i] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                    }
                 }
                 calc.remove(at: i+1)
                 calc.remove(at: i-1)
@@ -239,7 +284,7 @@ func doDegRad(calc: inout [CalcElement]) {
         if calc[i+1].string.isNumber {
             if i < calc.count-2 {
                 if calc[i+2].string == "deg" || calc[i+2].string == "°" {
-                    calc[i+1].string = String(Double(calc[i+1].string.toNumber)*Double.pi/180)
+                    calc[i+1] = CalcElement(string: "", isReal: true, real: calc[i+1].getDouble*Double.pi/180, range: calc[i+1].range)
                     calc.remove(at: i+2)
                 } else if calc[i+2].string == "rad" {
                     calc.remove(at: i+2)
@@ -250,14 +295,13 @@ func doDegRad(calc: inout [CalcElement]) {
     }
 }
 
-func doFunctions(calc: inout [CalcElement]) {
+func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF THE TIME
     var i = 0
     while i < calc.count-1 {
-        if calc[i+1].string.isNumber {
-            let fin = Double(calc[i+1].string.toNumber)
+        if calc[i+1].hasValue {
+            let fin = calc[i+1].getDouble
             if calc[i].string == "sqrt"  {
-                calc[i].string = toSystem(system: calc[i+1].string.system,
-                                          result: String(sqrt(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: sqrt(fin), range: calc[i].range)
                 if calc[i+1].hasUnit {
                     for u in 0...calc[i+1].unit.count-1 {
                         calc[i+1].unit[u].factor *= 1/2
@@ -266,78 +310,71 @@ func doFunctions(calc: inout [CalcElement]) {
                 }
                 calc.remove(at: i+1)
             } else if calc[i].string == "exp" {
-                calc[i].string = toSystem(system: calc[i+1].string.system,
-                                          result: String(exp(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: exp(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "" {
                 if fin > 0 {
-                    calc[i].string = toSystem(system: calc[i+1].string.system,
-                                              result: String(fin))
+                    calc[i] = CalcElement(string: "", isReal: true, real: fin, range: calc[i].range)
                 } else {
                     calc[i].string = "NaN"
                 }
                 calc.remove(at: i+1)
             } else if calc[i].string == "ln"  {
-                calc[i].string = toSystem(system: calc[i+1].string.system,
-                                          result: String(log(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: log(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "sinh" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(sinh(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: sinh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "cosh" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(cosh(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: cosh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "tanh" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(tanh(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: tanh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "asinh" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(asinh(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: asinh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "acosh" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(acosh(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: acosh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "atanh" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(atanh(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: atanh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "sin" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(smartRounding(sin(fin))))
+                calc[i] = CalcElement(string: "", isReal: true, real: sin(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "cos" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(smartRounding(cos(fin))))
+                calc[i] = CalcElement(string: "", isReal: true, real: cos(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "tan" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(smartRounding(tan(fin))))
+                calc[i] = CalcElement(string: "", isReal: true, real: tan(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "asin" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(asin(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: asin(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "acos" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(acos(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: acos(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "atan" {
-                calc[i].string = toSystem(system: calc[i+1].string.system, result: String(atan(fin)))
+                calc[i] = CalcElement(string: "", isReal: true, real: atan(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "round" {
-                calc[i+1].string = toSystem(system: calc[i+1].string.system,
-                                          result: String(round(fin)))
+                calc[i] = CalcElement(string: "", isInteger: true, integer: Int(round(fin)), range: calc[i].range)
                 calc.remove(at: i)
                 i-=1
             } else if calc[i].string == "ceil" {
-                calc[i+1].string = toSystem(system: calc[i+1].string.system,
-                                          result: String(ceil(fin)))
+                calc[i] = CalcElement(string: "", isInteger: true, integer: Int(ceil(fin)), range: calc[i].range)
                 calc.remove(at: i)
                 i-=1
             } else if calc[i].string == "floor" {
-                calc[i+1].string = toSystem(system: calc[i+1].string.system,
-                                          result: String(floor(fin)))
+                calc[i] = CalcElement(string: "", isInteger: true, integer: Int(floor(fin)), range: calc[i].range)
                 calc.remove(at: i)
                 i-=1
             } else if i < calc.count-2 {
-                if calc[i+2].string.isNumber {
-                    let second = Double(calc[i+2].string.toNumber)
+                if calc[i+2].hasValue {
+                    let second = calc[i+2].getDouble
                     if calc[i].string == "root"  {
-                        calc[i+2].string = toSystem(system: calc[i+1].string.system,
-                                                  result: String(pow(second, (1/fin))))
+                        calc[i+2] = CalcElement(string: "", unit: calc[i+2].unit, isReal: true, real: pow(second, (1/fin)), range: calc[i].range)
                         if calc[i+2].hasUnit {
                             for u in 0...calc[i+2].unit.count-1 {
                                 calc[i+2].unit[u].factor *= 1/fin
@@ -347,8 +384,7 @@ func doFunctions(calc: inout [CalcElement]) {
                         calc.remove(at: i)
                         i-=1
                     } else if calc[i].string == "log"  {
-                        calc[i].string = toSystem(system: calc[i+1].string.system,
-                                                  result: String(logN(N: fin, val: second)))
+                        calc[i] = CalcElement(string: "", isReal: true, real: logN(fin, second), range: calc[i].range)
                         calc.remove(at: i+2)
                         calc.remove(at: i+1)
                     }
@@ -426,7 +462,7 @@ func smartRounding(_ value: Double) -> Double {
     return rounded
 }
 
-func logN(N: Double, val: Double) -> Double {
+func logN(_ N: Double, _ val: Double) -> Double {
     return log(val)/log(N)
 }
 

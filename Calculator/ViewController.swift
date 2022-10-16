@@ -13,9 +13,8 @@ import Numerics
 
 struct CalcVariable {
     let name: String
-    var value: Double
+    var value: CalcElement
     let line: Int
-    var unit: [Unit] = []
 }
 
 struct CalcFunctions {
@@ -57,6 +56,7 @@ struct Constants {
     static let FUNCTION_DEFINED = 5
     static let BINARY_OVERFLOW_ERROR = 6
     static let REPRESENTATION_ERROR = 7
+    static let DIVIDE_ZERO_ERROR = 8
 }
 
 struct CalcElement {
@@ -64,7 +64,10 @@ struct CalcElement {
     var unit: [Unit] = []
     var isComplex: Bool = false
     var complex: Complex<Double> = Complex(0, 0)
-    //var value: Double
+    var isReal: Bool = false
+    var real: Double = 0.0
+    var isInteger: Bool = false
+    var integer: Int = 0
     var range: NSRange
     var error: Int = 0  // No error by default
 }
@@ -309,13 +312,14 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doVariablesReplacement(calc: &calc, line: l)
                             doFunctionsReplacement(calc: &calc, line: l)
                             doConstants(calc: &calc)
+                            doUnitsConversions(calc: &calc)
                             doParenthesis(calc: &calc, 0)
                             doGreekLetters(calc: &calc)
                             doDegRad(calc: &calc)
                             doParenthesis(calc: &calc, 0)
                             doMath(calc: &calc)
                             doConversions(calc: &calc)
-                            doUnitsConversions(calc: &calc)
+                            
                             doCurrencyConversions(calc: &calc)
                             doVariablesDefinition(calc: &calc, line: l)
                         }
@@ -330,8 +334,12 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             results[l] = getErrorMessage(calc[0].error)
                         } else if calc[0].isComplex {
                             results[l] = calc[0].complex.toString
-                        } else if calc[0].string.isNumber {
-                            results[l] = toSystem(system: calc[0].string.system, result: String(calc[0].string.toNumber))
+                        } else if calc[0].hasValue {
+                            if calc[0].isInteger {
+                                results[l] = String(calc[0].integer)
+                            } else if calc[0].isReal {
+                                results[l] = String(format: "%g", smartRounding(calc[0].real))
+                            }
                             if calc[0].hasUnit {
                                 results[l] += " "
                                 for (i, u) in calc[0].unit.enumerated() {
@@ -505,12 +513,11 @@ class ViewController: NSViewController, NSTextViewDelegate {
                     return
                 } else {
                     if variables.filter({$0.name == calc[0].string}).count == 0 {
-                        variables.append(CalcVariable(name: calc[0].string, value: Double(calc[2].string.toNumber), line: line, unit: calc[2].unit))
+                        variables.append(CalcVariable(name: calc[0].string, value: calc[2], line: line))
                         lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0x00FDF1, alpha: 1.0), range: calc[0].range))
                     } else {
                         if variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line == line {
-                            variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].value = Double(calc[2].string.toNumber)
-                            variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].unit = calc[2].unit
+                            variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].value = calc[2]
                             lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0x00FDF1, alpha: 1.0), range: calc[0].range))
                         }
                     }
@@ -530,8 +537,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 if calc[i].string == v.name {
                     if !(i < calc.count-1 && calc[i+1].string == "=") {
                         contains_func_var[line] = true
-                        calc[i].string = String(v.value)
-                        calc[i].unit = v.unit
+                        calc[i] =  v.value
                     }
                 }
             }
@@ -788,6 +794,8 @@ func getErrorMessage(_ error: Int) -> String {
             return "Number too big!"
         case Constants.REPRESENTATION_ERROR:
             return "Number can't be represented!"
+        case Constants.DIVIDE_ZERO_ERROR:
+            return "Can't divide by 0!"
         default:
             return "Error!"
     }

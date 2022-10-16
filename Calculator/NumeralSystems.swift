@@ -27,6 +27,8 @@ func doNumber(calc: inout [CalcElement]) {
                         calc[i+1].string = String(calc[i+1].string.suffix(calc[i+1].string.count-k+1))
                     }
                     calc[i].string = "0"+calc[i].string
+                    calc[i].isInteger = true
+                    calc[i].integer = Int(calc[i].string.dropFirst(2), radix: 2) ?? 0
                     calc[i].range.location -= 1
                     calc[i].range.length = calc[i].string.count
                     calc.remove(at: i+1)
@@ -47,6 +49,8 @@ func doNumber(calc: inout [CalcElement]) {
                         calc[j].string = String(calc[j].string.suffix(calc[j].string.count-k+1))
                     }
                     calc[i].string = "0"+calc[i].string
+                    calc[i].isInteger = true
+                    calc[i].integer = Int(calc[i].string.dropFirst(2), radix: 16) ?? 0
                     calc[i].range.location -= 1
                     calc[i].range.length = calc[i].string.count
                     calc.remove(at: i-1)
@@ -56,9 +60,23 @@ func doNumber(calc: inout [CalcElement]) {
         }
         i+=1
     }
+    i = 0
+    while i < calc.count {
+        if !calc[i].hasValue {
+            if calc[i].string.isInteger {
+                calc[i].isInteger = true
+                calc[i].integer = Int(calc[i].string) ?? 0
+            } else if calc[i].string.isDouble {
+                var input = calc[i].string.replacingOccurrences(of: " ", with: "", options: NSString.CompareOptions.literal, range: nil)
+                input = input.replacingOccurrences(of: ",", with: ".", options: NSString.CompareOptions.literal, range: nil)
+                calc[i].isReal = true
+                calc[i].real = Double(input) ?? 0.0
+            }
+        }
+        i+=1
+    }
     removeAllSpaces(calc: &calc)
 }
-
 
 /// Convert number from a numeral system to another
 /// - Parameter calc: calc array
@@ -147,4 +165,20 @@ func removeAllSpaces(calc: inout [CalcElement]) {
             i += 1
         }
     }
+}
+
+func calcPrint(_ calc: [CalcElement]) {
+    print("[")
+    for e in calc {
+        if e.isInteger {
+            print("  Int      - "+String(e.integer)+" - ")
+        } else if e.isReal {
+            print("  Real     - "+String(e.real)+" - "+e.string)
+        } else if e.isComplex {
+            print("  Complex  - "+String(e.complex.imaginary)+"i+"+String(e.complex.real)+" - "+e.string)
+        } else {
+            print("  Operator - "+e.string)
+        }
+    }
+    print("]")
 }

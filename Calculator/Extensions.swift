@@ -10,7 +10,14 @@ import Numerics
 import Cocoa
 
 extension String {
-    var isInteger: Bool { return Int(self) != nil }
+    var isInteger: Bool {
+        for c in self {
+            if c < "0" || c > "9" {
+                return false
+            }
+        }
+        return true
+    }
     var isFloat: Bool { return Float(self) != nil }
     var isDouble: Bool {
         let input = self.replacingOccurrences(of: ",", with: ".", options: NSString.CompareOptions.literal, range: nil)
@@ -18,7 +25,7 @@ extension String {
     }
     var isNumber: Bool {
         let input = self.replacingOccurrences(of: " ", with: "", options: NSString.CompareOptions.literal, range: nil)
-        return (input != ".") && (input.isDouble || input.prefix(2) == "0x" || input.prefix(2) == "0b")
+        return (input != ".") && (input != ",") && (input.isDouble || input.prefix(2) == "0x" || input.prefix(2) == "0b")
     }
     var isHex: Bool { return filter(\.isHexDigit).count == count }
     var isOperator: Bool { return self == "*" || self == "/" || self == "+" || self == "-" || self == "^" || self == "(" || self == ")" || self == "=" || self == ">" || self == "<" || self == "%" || self == "|" || self == "!" }
@@ -160,6 +167,25 @@ extension Double {
 
 extension CalcElement {
     var hasUnit: Bool { return self.unit.count > 0 }
+    var hasValue: Bool { return self.isInteger || self.isReal }
+    var getDouble: Double {
+        if self.isInteger {
+            return Double(self.integer)
+        }
+        return self.real
+    }
+    mutating func toDouble() {
+        if self.isInteger {
+            self.isInteger = false
+            self.isReal = true
+            self.real = Double(self.integer)
+            self.integer = 0
+        }
+    }
+}
+
+extension [CalcElement] {
+    var isInteger: Bool { return self.filter { $0.hasValue }.count == self.filter { $0.isInteger }.count }
 }
 
 extension NSColor {

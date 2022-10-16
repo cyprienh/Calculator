@@ -17,6 +17,7 @@ struct UnitName {
     let name: String
     let symbol: String
     let hasPrefix: Bool
+    let canFactor: Bool
 }
 
 struct Unit {
@@ -24,6 +25,8 @@ struct Unit {
     var prefix: UnitPrefix
     var factor: Double = 1
 }
+
+// CHECK IF UNITS ARE VALID --> FACTORS ARE VALID AND THE SAME
 
 let Prefixes: [UnitPrefix] = [
     UnitPrefix(name: "yotta", symbol: "Y", factor: 24),
@@ -49,173 +52,222 @@ let Prefixes: [UnitPrefix] = [
 
 
 let Units: [UnitName] = [
-    UnitName(name: "bit", symbol: "bit", hasPrefix: true),
-    UnitName(name: "mole", symbol: "mol", hasPrefix: true),
-    UnitName(name: "hertz", symbol: "Hz", hasPrefix: true),
-    UnitName(name: "weber", symbol: "Wb", hasPrefix: true),
-    UnitName(name: "mile", symbol: "mi", hasPrefix: false),
-    UnitName(name: "yard", symbol: "yd", hasPrefix: false),
-    UnitName(name: "foot", symbol: "ft", hasPrefix: false),
-    UnitName(name: "inch", symbol: "in", hasPrefix: false),
-    UnitName(name: "pound", symbol: "lb", hasPrefix: false),
-    UnitName(name: "ounce", symbol: "oz", hasPrefix: false),
-    UnitName(name: "fahrenheit", symbol: "°F", hasPrefix: false),
-    UnitName(name: "celsius", symbol: "°C", hasPrefix: false),
-    UnitName(name: "meter", symbol: "m", hasPrefix: true),
-    UnitName(name: "liter", symbol: "L", hasPrefix: true),
-    UnitName(name: "second", symbol: "s", hasPrefix: true),
-    UnitName(name: "gram", symbol: "g", hasPrefix: true),
-    UnitName(name: "newton", symbol: "N", hasPrefix: true),
-    UnitName(name: "joule", symbol: "J", hasPrefix: true),
-    UnitName(name: "watt", symbol: "W", hasPrefix: true),
-    UnitName(name: "kelvin", symbol: "K", hasPrefix: true),
-    UnitName(name: "ampere", symbol: "A", hasPrefix: true),
-    UnitName(name: "coulomb", symbol: "C", hasPrefix: true),
-    UnitName(name: "volt", symbol: "V", hasPrefix: true),
-    UnitName(name: "ohm", symbol: "Ω", hasPrefix: true),
-    UnitName(name: "farad", symbol: "F", hasPrefix: true),
-    UnitName(name: "siemens", symbol: "S", hasPrefix: true),
-    UnitName(name: "henry", symbol: "H", hasPrefix: true),
-    UnitName(name: "tesla", symbol: "T", hasPrefix: true),
-    UnitName(name: "byte", symbol: "B", hasPrefix: true),
-    UnitName(name: "byte", symbol: "o", hasPrefix: true),
-    UnitName(name: "bit", symbol: "b", hasPrefix: true),
-    UnitName(name: "foot", symbol: "'", hasPrefix: false),
-    UnitName(name: "inch", symbol: "\"", hasPrefix: false)
+    UnitName(name: "bit", symbol: "bit", hasPrefix: true, canFactor: false),
+    UnitName(name: "mole", symbol: "mol", hasPrefix: true, canFactor: true),
+    UnitName(name: "hertz", symbol: "Hz", hasPrefix: true, canFactor: true),
+    UnitName(name: "weber", symbol: "Wb", hasPrefix: true, canFactor: true),
+    UnitName(name: "mile", symbol: "mi", hasPrefix: false, canFactor: true),
+    UnitName(name: "yard", symbol: "yd", hasPrefix: false, canFactor: true),
+    UnitName(name: "foot", symbol: "ft", hasPrefix: false, canFactor: true),
+    UnitName(name: "inch", symbol: "in", hasPrefix: false, canFactor: true),
+    UnitName(name: "pound", symbol: "lb", hasPrefix: false, canFactor: true),
+    UnitName(name: "ounce", symbol: "oz", hasPrefix: false, canFactor: true),
+    UnitName(name: "fahrenheit", symbol: "°F", hasPrefix: false, canFactor: false),
+    UnitName(name: "celsius", symbol: "°C", hasPrefix: false, canFactor: false),
+    UnitName(name: "meter", symbol: "m", hasPrefix: true, canFactor: true),
+    UnitName(name: "liter", symbol: "L", hasPrefix: true, canFactor: true),
+    UnitName(name: "second", symbol: "s", hasPrefix: true, canFactor: true),
+    UnitName(name: "gram", symbol: "g", hasPrefix: true, canFactor: true),
+    UnitName(name: "newton", symbol: "N", hasPrefix: true, canFactor: true),
+    UnitName(name: "joule", symbol: "J", hasPrefix: true, canFactor: true),
+    UnitName(name: "watt", symbol: "W", hasPrefix: true, canFactor: true),
+    UnitName(name: "kelvin", symbol: "K", hasPrefix: true, canFactor: false),
+    UnitName(name: "ampere", symbol: "A", hasPrefix: true, canFactor: true),
+    UnitName(name: "coulomb", symbol: "C", hasPrefix: true, canFactor: true),
+    UnitName(name: "volt", symbol: "V", hasPrefix: true, canFactor: true),
+    UnitName(name: "ohm", symbol: "Ω", hasPrefix: true, canFactor: true),
+    UnitName(name: "farad", symbol: "F", hasPrefix: true, canFactor: true),
+    UnitName(name: "siemens", symbol: "S", hasPrefix: true, canFactor: true),
+    UnitName(name: "henry", symbol: "H", hasPrefix: true, canFactor: true),
+    UnitName(name: "tesla", symbol: "T", hasPrefix: true, canFactor: true),
+    UnitName(name: "byte", symbol: "B", hasPrefix: true, canFactor: false),
+    UnitName(name: "byte", symbol: "o", hasPrefix: true, canFactor: false),
+    UnitName(name: "bit", symbol: "b", hasPrefix: true, canFactor: false),
+    UnitName(name: "foot", symbol: "'", hasPrefix: false, canFactor: true),
+    UnitName(name: "inch", symbol: "\"", hasPrefix: false, canFactor: true)
 ]
 
 func unitConversions(_ from: CalcElement, to: [Unit]) -> CalcElement {
     var new_element = from
+    new_element.toDouble()
+
     if from.unit.contains(where: {$0.unit.name == "celsius"}) && to.contains(where: {$0.unit.name == "fahrenheit"}) {
-        let new_value = 9/5*Double(from.string.toNumber)+32
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "celsius" ? Unit(unit: Units.first(where: {$0.name == "fahrenheit"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "celsius"})?.factor == to.first(where: {$0.unit.name == "fahrenheit"})?.factor {
+            new_element.real = 9/5*from.getDouble+32
+            new_element.unit = from.unit.map({ $0.unit.name == "celsius" ? Unit(unit: Units.first(where: {$0.name == "fahrenheit"})!, prefix: $0.prefix) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "fahrenheit"}) && to.contains(where: {$0.unit.name == "celsius"}) {
-        let new_value = 5/9*(Double(from.string.toNumber)-32)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == to.first(where: {$0.unit.name == "celsius"})?.factor {
+            new_element.real = 5/9*(from.getDouble-32)
+            new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "celsius"}) && to.contains(where: {$0.unit.name == "kelvin"}) {
-        let new_value = Double(from.string.toNumber)+273.15
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "celsius" ? Unit(unit: Units.first(where: {$0.name == "kelvin"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "celsius"})?.factor == to.first(where: {$0.unit.name == "kelvin"})?.factor {
+            new_element.real = from.getDouble+273.15
+            new_element.unit = from.unit.map({ $0.unit.name == "celsius" ? Unit(unit: Units.first(where: {$0.name == "kelvin"})!, prefix: $0.prefix) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "kelvin"}) && to.contains(where: {$0.unit.name == "celsius"}) {
-        let new_value = Double(from.string.toNumber)-273.15
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == to.first(where: {$0.unit.name == "celsius"})?.factor {
+            new_element.real = from.getDouble-273.15
+            new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "kelvin"}) && to.contains(where: {$0.unit.name == "fahrenheit"}) {
-        let new_value = 9/5*(Double(from.string.toNumber)-273.15)+32
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "fahrenheit"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == to.first(where: {$0.unit.name == "fahrenheit"})?.factor {
+            new_element.real = 9/5*(from.getDouble-273.15)+32
+            new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "fahrenheit"})!, prefix: $0.prefix) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "fahrenheit"}) && to.contains(where: {$0.unit.name == "kelvin"}) {
-        let new_value = 5/9*(Double(from.string.toNumber)-32)+273.15
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "kelvin"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == to.first(where: {$0.unit.name == "kelvin"})?.factor {
+            new_element.real = 5/9*(from.getDouble-32)+273.15
+            new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "kelvin"})!, prefix: $0.prefix) : $0 })
+        }
     }
     
     if from.unit.contains(where: {$0.unit.name == "byte"}) && to.contains(where: {$0.unit.name == "bit"}) {
-        let new_value = 8*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "byte" ? Unit(unit: Units.first(where: {$0.name == "bit"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "byte"})?.factor == to.first(where: {$0.unit.name == "bit"})?.factor {
+            new_element.real = 8*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "byte" ? Unit(unit: Units.first(where: {$0.name == "bit"})!, prefix: $0.prefix) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "bit"}) && to.contains(where: {$0.unit.name == "byte"}) {
-        let new_value = Double(from.string.toNumber)/8
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "bit" ? Unit(unit: Units.first(where: {$0.name == "byte"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "bit"})?.factor == to.first(where: {$0.unit.name == "byte"})?.factor {
+            new_element.real = from.getDouble/8
+            new_element.unit = from.unit.map({ $0.unit.name == "bit" ? Unit(unit: Units.first(where: {$0.name == "byte"})!, prefix: $0.prefix) : $0 })
+        }
     }
     
     if from.unit.contains(where: {$0.unit.name == "inch"}) && to.contains(where: {$0.unit.name == "meter"}) {
-        let new_value = 0.0254*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "inch"})?.factor == to.first(where: {$0.unit.name == "meter"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "inch"})?.factor ?? 1.0
+            new_element.real = pow(0.0254, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "meter"}) && to.contains(where: {$0.unit.name == "inch"}) {
-        let new_value = 1/0.0254*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "meter"})?.factor == to.first(where: {$0.unit.name == "inch"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "meter"})?.factor ?? 1.0
+            new_element.real = pow(1/0.0254, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "foot"}) && to.contains(where: {$0.unit.name == "meter"}) {
-        let new_value = 0.3048*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "foot"})?.factor == to.first(where: {$0.unit.name == "meter"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "foot"})?.factor ?? 1.0
+            new_element.real = pow(0.3048, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "meter"}) && to.contains(where: {$0.unit.name == "foot"}) {
-        let new_value = 1/0.3048*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "meter"})?.factor == to.first(where: {$0.unit.name == "foot"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "meter"})?.factor ?? 1.0
+            new_element.real = pow(1/0.3048, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "yard"}) && to.contains(where: {$0.unit.name == "meter"}) {
-        let new_value = 0.9144*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "yard"})?.factor == to.first(where: {$0.unit.name == "meter"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "yard"})?.factor ?? 1.0
+            new_element.real = pow(0.9144, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "meter"}) && to.contains(where: {$0.unit.name == "yard"}) {
-        let new_value = 1/0.9144*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "meter"})?.factor == to.first(where: {$0.unit.name == "yard"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "meter"})?.factor ?? 1.0
+            new_element.real = pow(1/0.9144, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "mile"}) && to.contains(where: {$0.unit.name == "meter"}) {
-        let new_value = 1609.3*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "mile"})?.factor == to.first(where: {$0.unit.name == "meter"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "mile"})?.factor ?? 1.0
+            new_element.real = pow(1609.3, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "meter"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "meter"}) && to.contains(where: {$0.unit.name == "mile"}) {
-        let new_value = 1/1609.3*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "meter"})?.factor == to.first(where: {$0.unit.name == "mile"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "meter"})?.factor ?? 1.0
+            new_element.real = pow(1/1609.3, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "meter" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     
     if from.unit.contains(where: {$0.unit.name == "inch"}) && to.contains(where: {$0.unit.name == "foot"}) {
-        let new_value = Double(from.string.toNumber)/12
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "inch"})?.factor == to.first(where: {$0.unit.name == "foot"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "inch"})?.factor ?? 1.0
+            new_element.real = from.getDouble/pow(12, factor)
+            new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "foot"}) && to.contains(where: {$0.unit.name == "inch"}) {
-        let new_value = 12*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "foot"})?.factor == to.first(where: {$0.unit.name == "inch"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "foot"})?.factor ?? 1.0
+            new_element.real = pow(12, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "inch"}) && to.contains(where: {$0.unit.name == "yard"}) {
-        let new_value = Double(from.string.toNumber)/36
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "inch"})?.factor == to.first(where: {$0.unit.name == "yard"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "inch"})?.factor ?? 1.0
+            new_element.real = from.getDouble/pow(36, factor)
+            new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "yard"}) && to.contains(where: {$0.unit.name == "inch"}) {
-        let new_value = 36*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "yard"})?.factor == to.first(where: {$0.unit.name == "inch"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "yard"})?.factor ?? 1.0
+            new_element.real = pow(36, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "inch"}) && to.contains(where: {$0.unit.name == "mile"}) {
-        let new_value = Double(from.string.toNumber)/63360
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "inch"})?.factor == to.first(where: {$0.unit.name == "mile"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "inch"})?.factor ?? 1.0
+            new_element.real = from.getDouble/pow(63360, factor)
+            new_element.unit = from.unit.map({ $0.unit.name == "inch" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "mile"}) && to.contains(where: {$0.unit.name == "inch"}) {
-        let new_value = 63360*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "mile"})?.factor == to.first(where: {$0.unit.name == "inch"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "mile"})?.factor ?? 1.0
+            new_element.real = pow(63360, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "inch"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "foot"}) && to.contains(where: {$0.unit.name == "yard"}) {
-        let new_value = Double(from.string.toNumber)/3
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "foot"})?.factor == to.first(where: {$0.unit.name == "yard"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "foot"})?.factor ?? 1.0
+            new_element.real = from.getDouble/pow(3, factor)
+            new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "yard"}) && to.contains(where: {$0.unit.name == "foot"}) {
-        let new_value = 3*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "yard"})?.factor == to.first(where: {$0.unit.name == "foot"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "yard"})?.factor ?? 1.0
+            new_element.real = pow(3, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "foot"}) && to.contains(where: {$0.unit.name == "mile"}) {
-        let new_value = Double(from.string.toNumber)/5280
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "foot"})?.factor == to.first(where: {$0.unit.name == "mile"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "foot"})?.factor ?? 1.0
+            new_element.real = from.getDouble/pow(5280, factor)
+            new_element.unit = from.unit.map({ $0.unit.name == "foot" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "mile"}) && to.contains(where: {$0.unit.name == "foot"}) {
-        let new_value = 5280*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "mile"})?.factor == to.first(where: {$0.unit.name == "foot"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "mile"})?.factor ?? 1.0
+            new_element.real = pow(5280, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "foot"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
     if from.unit.contains(where: {$0.unit.name == "yard"}) && to.contains(where: {$0.unit.name == "mile"}) {
-        let new_value = Double(from.string.toNumber)/1760
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "yard"})?.factor == to.first(where: {$0.unit.name == "mile"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "yard"})?.factor ?? 1.0
+            new_element.real = from.getDouble/pow(1760, factor)
+            new_element.unit = from.unit.map({ $0.unit.name == "yard" ? Unit(unit: Units.first(where: {$0.name == "mile"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     } else if from.unit.contains(where: {$0.unit.name == "mile"}) && to.contains(where: {$0.unit.name == "yard"}) {
-        let new_value = 1760*Double(from.string.toNumber)
-        new_element.string = String(new_value)
-        new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix) : $0 })
+        if from.unit.first(where: {$0.unit.name == "mile"})?.factor == to.first(where: {$0.unit.name == "yard"})?.factor {
+            let factor = from.unit.first(where: {$0.unit.name == "mile"})?.factor ?? 1.0
+            new_element.real = pow(1760, factor)*from.getDouble
+            new_element.unit = from.unit.map({ $0.unit.name == "mile" ? Unit(unit: Units.first(where: {$0.name == "yard"})!, prefix: $0.prefix, factor: factor) : $0 })
+        }
     }
-    
     return new_element
 }
 
@@ -228,7 +280,7 @@ func doUnitsConversions(calc: inout [CalcElement]) {
             if sameUnit(c1, c2) {
                 let old_unit = c1.unit
                 let new_unit = c2.unit
-                var new_value = Double(c1.string.toNumber)
+                var new_value = c1.getDouble
                 if old_unit.count > 0 && new_unit.count > 0 {
                     for i in 0...old_unit.count-1 {
                         for j in 0...new_unit.count-1 {
@@ -239,9 +291,8 @@ func doUnitsConversions(calc: inout [CalcElement]) {
                     }
                     //let calc_data: [String: CalcElement] = ["element": calc[i]]
                     //NotificationCenter.default.post(name: Notification.Name(rawValue: "removeColor"), object: nil, userInfo: calc_data)
-                    calc[i-1].string = String(new_value)
-                    calc[i-1].unit = new_unit
-                    calc.removeSubrange(i..<calc.count-1)
+                    calc[i-1] = CalcElement(string: "", unit: new_unit, isReal: true, real: new_value, range: calc[i-1].range)
+                    calc.removeSubrange(i..<calc.count)
                     i-=1
                 }
             }
@@ -252,7 +303,7 @@ func doUnitsConversions(calc: inout [CalcElement]) {
 
 func findUnit(calc: inout [CalcElement], start: Int) -> CalcElement {
     var new_calc = Array<CalcElement>(calc[start...calc.count-1])
-    new_calc.insert(CalcElement(string: "1", range: NSMakeRange(0, 0)), at: 0)
+    new_calc.insert(CalcElement(string: "1", isReal: true, real: 1, range: NSMakeRange(0, 0)), at: 0)
     doUnits(calc: &new_calc)
     return new_calc[0]
 }
@@ -260,11 +311,11 @@ func findUnit(calc: inout [CalcElement], start: Int) -> CalcElement {
 func doUnits(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count {
-        if calc[i].string.isText && ((calc[i-1].string.isNumber && !calc[i-1].hasUnit)
+        if calc[i].string.isText && ((calc[i-1].hasValue && !calc[i-1].hasUnit)
                                      || (i > 1 && (calc[i-1].string == "." || calc[i-1].string == "*" || calc[i-1].string == "/") && calc[i-2].hasUnit))
             && (i == calc.count-1 || (calc[i+1].string != "hex" && calc[i+1].string != "dec" && calc[i+1].string != "bin")){
-            let isFirst = calc[i-1].string.isNumber && calc[i-1].string != "."
-            var unit: UnitName = UnitName(name: "null", symbol: "null", hasPrefix: false)
+            let isFirst = calc[i-1].hasValue && calc[i-1].string != "."
+            var unit: UnitName = UnitName(name: "null", symbol: "null", hasPrefix: false, canFactor: <#Bool#>)
             var prefix: UnitPrefix = UnitPrefix(name: "null", symbol: "null", factor: 0)
             for u in Units {
                 if calc[i].string.suffix(u.symbol.count) == u.symbol {
@@ -287,8 +338,8 @@ func doUnits(calc: inout [CalcElement]) {
                 }
                 var ulength = prefix.symbol.count + unit.symbol.count
                 var finalUnit = Unit(unit: unit, prefix: prefix)
-                if i < calc.count-1 && calc[i+1].string.isInteger {
-                    let factor = calc[i+1].string.toNumber
+                if i < calc.count-1 && calc[i+1].isInteger {
+                    let factor = Double(calc[i+1].integer)
                     ulength += calc[i+1].string.count
                     if factor != 0 {
                         finalUnit.factor = (calc[i-1].string != "/") ? factor : -factor
@@ -296,14 +347,14 @@ func doUnits(calc: inout [CalcElement]) {
                     }
                     calc[isFirst ? i-1 : i-2].range.length += ulength
                     calc.remove(at: i+1)
-                } else if (i < calc.count-2 && (calc[i+1].string == "^" || calc[i+1].string == "^-") && calc[i+2].string.isInteger) {
+                } else if (i < calc.count-2 && (calc[i+1].string == "^" || calc[i+1].string == "^-") && calc[i+2].isInteger) {
                     var factor: Double = 0
                     if calc[i+1].string == "^-" {
                         ulength += 2+calc[i+2].string.count
-                        factor = -calc[i+2].string.toNumber
+                        factor = -Double(calc[i+2].integer)
                     } else {
                         ulength += 1+calc[i+2].string.count
-                        factor = calc[i+2].string.toNumber
+                        factor = Double(calc[i+2].integer)
                     }
                     if factor != 0 {
                         finalUnit.factor = (calc[i-1].string != "/") ? factor : -factor
