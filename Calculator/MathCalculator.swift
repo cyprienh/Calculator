@@ -230,6 +230,9 @@ func doSimplifications(calc: inout [CalcElement]) {
     }
 }
 
+
+/// Convert whatever deg to rad for trigonometric function
+/// - Parameter calc: calc array
 func doDegRad(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count-1 {
@@ -362,6 +365,11 @@ func doFunctions(calc: inout [CalcElement]) {
     }
 }
  
+
+/// Reccurently calculate what's inside the parenthesis
+/// - Parameters:
+///   - calc: calc array
+///   - pos: for recurrence
 func doParenthesis(calc: inout [CalcElement], _ pos: Int) {
     var i = pos
     var start = 0
@@ -408,6 +416,10 @@ func doParenthesis(calc: inout [CalcElement], _ pos: Int) {
     }
  }
 
+
+/// Round result properly depending on settings
+/// - Parameter value: value to round
+/// - Returns: rounded value
 func smartRounding(_ value: Double) -> Double {
     let power = NSDecimalNumber(decimal: pow(10, AppVariables.digits)).doubleValue
     let rounded = round(power * value) / power

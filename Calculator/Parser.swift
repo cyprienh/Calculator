@@ -4,8 +4,9 @@ import Numerics
 
 /// Parse content of line (convert string to [CalcElement])
 /// - Parameters:
-///     - line: the current line to parse
-/// - Returns: the [CalcElement] with each "type" separated
+///   - line: current line to parse
+///   - index: starting index of line in str
+/// - Returns: calc array with each type separated
 func parseLine(_ line: String, _ index: Int) -> [CalcElement] {
     var values: [CalcElement] = []
     var lastIndex = 0

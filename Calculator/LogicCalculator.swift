@@ -137,9 +137,6 @@ func doNOT(calc: inout [CalcElement]) {
 
 func isValidInteger(_ x: Int) -> Bool {
     let max = Int(pow(Double(2), Double(AppVariables.bits)))
-    if (AppVariables.representation == Constants.SIGNED && x >= (-max/2) && x < (max/2))
-        || (AppVariables.representation == Constants.UNSIGNED && x >= 0 && x < max) {
-        return true
-    }
-    return false
+    return ((AppVariables.representation == Constants.SIGNED && x >= (-max/2) && x < (max/2))
+        || (AppVariables.representation == Constants.UNSIGNED && x >= 0 && x < max))
 }

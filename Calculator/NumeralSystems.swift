@@ -7,6 +7,9 @@
 
 import Foundation
 
+
+/// Convert number from binary or hex to decimal
+/// - Parameter calc: calc array
 func doNumber(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count {
@@ -56,6 +59,9 @@ func doNumber(calc: inout [CalcElement]) {
     removeAllSpaces(calc: &calc)
 }
 
+
+/// Convert number from a numeral system to another
+/// - Parameter calc: calc array
 func doConversions(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count {
@@ -115,6 +121,12 @@ func doScientificNotation(calc: inout [CalcElement]) {
     }
 }
 
+
+/// Print number to any numeral system
+/// - Parameters:
+///   - system: destination system
+///   - result: number to convert
+/// - Returns: converted number in String
 func toSystem(system: Int, result: String) -> String {
     var final = ""
     switch system {
