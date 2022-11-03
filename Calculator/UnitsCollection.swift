@@ -26,8 +26,6 @@ struct Unit {
     var factor: Double = 1
 }
 
-// CHECK IF UNITS ARE VALID --> FACTORS ARE VALID AND THE SAME
-
 let Prefixes: [UnitPrefix] = [
     UnitPrefix(name: "yotta", symbol: "Y", factor: 24),
     UnitPrefix(name: "zetta", symbol: "Z", factor: 21),
@@ -92,48 +90,71 @@ func unitConversions(_ from: CalcElement, to: [Unit]) -> CalcElement {
     new_element.toDouble()
 
     if from.unit.contains(where: {$0.unit.name == "celsius"}) && to.contains(where: {$0.unit.name == "fahrenheit"}) {
-        if from.unit.first(where: {$0.unit.name == "celsius"})?.factor == to.first(where: {$0.unit.name == "fahrenheit"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "celsius"})?.factor == to.first(where: {$0.unit.name == "fahrenheit"})?.factor
+            && from.unit.first(where: {$0.unit.name == "celsius"})?.factor == 1 {
             new_element.real = 9/5*from.getDouble+32
             new_element.unit = from.unit.map({ $0.unit.name == "celsius" ? Unit(unit: Units.first(where: {$0.name == "fahrenheit"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     } else if from.unit.contains(where: {$0.unit.name == "fahrenheit"}) && to.contains(where: {$0.unit.name == "celsius"}) {
-        if from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == to.first(where: {$0.unit.name == "celsius"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == to.first(where: {$0.unit.name == "celsius"})?.factor
+            && from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == 1 {
             new_element.real = 5/9*(from.getDouble-32)
             new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     }
     if from.unit.contains(where: {$0.unit.name == "celsius"}) && to.contains(where: {$0.unit.name == "kelvin"}) {
-        if from.unit.first(where: {$0.unit.name == "celsius"})?.factor == to.first(where: {$0.unit.name == "kelvin"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "celsius"})?.factor == to.first(where: {$0.unit.name == "kelvin"})?.factor
+            && from.unit.first(where: {$0.unit.name == "celsius"})?.factor == 1 {
             new_element.real = from.getDouble+273.15
             new_element.unit = from.unit.map({ $0.unit.name == "celsius" ? Unit(unit: Units.first(where: {$0.name == "kelvin"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     } else if from.unit.contains(where: {$0.unit.name == "kelvin"}) && to.contains(where: {$0.unit.name == "celsius"}) {
         if from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == to.first(where: {$0.unit.name == "celsius"})?.factor {
-            new_element.real = from.getDouble-273.15
-            new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+            if from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == 1 {
+                new_element.real = from.getDouble-273.15
+                new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+            }
         }
     }
     if from.unit.contains(where: {$0.unit.name == "kelvin"}) && to.contains(where: {$0.unit.name == "fahrenheit"}) {
-        if from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == to.first(where: {$0.unit.name == "fahrenheit"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == to.first(where: {$0.unit.name == "fahrenheit"})?.factor
+            && from.unit.first(where: {$0.unit.name == "kelvin"})?.factor == 1 {
             new_element.real = 9/5*(from.getDouble-273.15)+32
             new_element.unit = from.unit.map({ $0.unit.name == "kelvin" ? Unit(unit: Units.first(where: {$0.name == "fahrenheit"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     } else if from.unit.contains(where: {$0.unit.name == "fahrenheit"}) && to.contains(where: {$0.unit.name == "kelvin"}) {
-        if from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == to.first(where: {$0.unit.name == "kelvin"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == to.first(where: {$0.unit.name == "kelvin"})?.factor
+            && from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == 1 {
             new_element.real = 5/9*(from.getDouble-32)+273.15
             new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "kelvin"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     }
     
     if from.unit.contains(where: {$0.unit.name == "byte"}) && to.contains(where: {$0.unit.name == "bit"}) {
-        if from.unit.first(where: {$0.unit.name == "byte"})?.factor == to.first(where: {$0.unit.name == "bit"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "byte"})?.factor == to.first(where: {$0.unit.name == "bit"})?.factor
+            && from.unit.first(where: {$0.unit.name == "byte"})?.factor == 1 {
             new_element.real = 8*from.getDouble
             new_element.unit = from.unit.map({ $0.unit.name == "byte" ? Unit(unit: Units.first(where: {$0.name == "bit"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     } else if from.unit.contains(where: {$0.unit.name == "bit"}) && to.contains(where: {$0.unit.name == "byte"}) {
-        if from.unit.first(where: {$0.unit.name == "bit"})?.factor == to.first(where: {$0.unit.name == "byte"})?.factor {
+        if from.unit.first(where: {$0.unit.name == "bit"})?.factor == to.first(where: {$0.unit.name == "byte"})?.factor
+            && from.unit.first(where: {$0.unit.name == "bit"})?.factor == 1 {
             new_element.real = from.getDouble/8
             new_element.unit = from.unit.map({ $0.unit.name == "bit" ? Unit(unit: Units.first(where: {$0.name == "byte"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
         }
     }
     
@@ -277,6 +298,10 @@ func doUnitsConversions(calc: inout [CalcElement]) {
         if (calc[i].string == "in" || calc[i].string == "to") && calc[i-1].hasUnit && calc[i+1].string.isText {
             let c2 = findUnit(calc: &calc, start: i+1)
             let c1 = unitConversions(calc[i-1], to: c2.unit)
+            if c1.error != Constants.NO_ERROR {
+                calc = [c1]
+                return
+            }
             if sameUnit(c1, c2) {
                 let old_unit = c1.unit
                 let new_unit = c2.unit
@@ -308,6 +333,18 @@ func findUnit(calc: inout [CalcElement], start: Int) -> CalcElement {
     return new_calc[0]
 }
 
+func getAdditionUnit(_ x: CalcElement, _ y: CalcElement) -> (Bool, Double) {
+    var factor_x: Double = 0
+    var factor_y: Double = 0
+    for u in x.unit {
+        factor_x += u.factor*Double(u.prefix.factor)
+    }
+    for u in y.unit {
+        factor_y += u.factor*Double(u.prefix.factor)
+    }
+    return (factor_x > factor_y, abs(factor_x - factor_y))
+}
+
 func doUnits(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count {
@@ -315,7 +352,7 @@ func doUnits(calc: inout [CalcElement]) {
                                      || (i > 1 && (calc[i-1].string == "." || calc[i-1].string == "*" || calc[i-1].string == "/") && calc[i-2].hasUnit))
             && (i == calc.count-1 || (calc[i+1].string != "hex" && calc[i+1].string != "dec" && calc[i+1].string != "bin")){
             let isFirst = calc[i-1].hasValue && calc[i-1].string != "."
-            var unit: UnitName = UnitName(name: "null", symbol: "null", hasPrefix: false, canFactor: <#Bool#>)
+            var unit: UnitName = UnitName(name: "null", symbol: "null", hasPrefix: false, canFactor: false)
             var prefix: UnitPrefix = UnitPrefix(name: "null", symbol: "null", factor: 0)
             for u in Units {
                 if calc[i].string.suffix(u.symbol.count) == u.symbol {

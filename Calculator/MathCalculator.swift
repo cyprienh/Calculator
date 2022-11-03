@@ -172,41 +172,49 @@ func doPlusMinus(calc: inout [CalcElement]) {
     while i < calc.count-1 {
         if calc[i].string == "+" || calc[i].string == "-" {
             if calc[i-1].hasValue && calc[i+1].hasValue {
-                if calc[i].string == "+" {
-                    if calc.isInteger {
-                        let left = calc[i-1].integer
-                        let right = calc[i+1].integer
-                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left+right, range: calc[i-1].range)
-                    } else {
-                        let left = calc[i-1].getDouble
-                        let right = calc[i+1].getDouble
-                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left+right, range: calc[i-1].range)
-                    }
-                    if calc[i+1].hasUnit {
-                        for u in calc[i+1].unit {
-                            calc[i-1].unit.append(u)
+                if (!calc[i-1].hasUnit && !calc[i+1].hasUnit) || sameUnit(calc[i-1], calc[i+1]) {
+                    var final_unit: [Unit] = calc[i-1].unit
+                    var x_factor: Double = 1
+                    var y_factor: Double = 1
+                    if calc[i-1].hasUnit {
+                        let result = getAdditionUnit(calc[i-1], calc[i+1])
+                        if result.0 {
+                            final_unit = calc[i+1].unit
+                            x_factor = pow(10, result.1)
+                        } else {
+                            final_unit = calc[i-1].unit
+                            y_factor = pow(10, result.1)
                         }
                     }
-                } else if calc[i].string == "-" {
-                    if calc.isInteger {
-                        let left = calc[i-1].integer
-                        let right = calc[i+1].integer
-                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left-right, range: calc[i-1].range)
-                    } else {
-                        let left = calc[i-1].getDouble
-                        let right = calc[i+1].getDouble
-                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left-right, range: calc[i-1].range)
-                    }
-                    if calc[i+1].hasUnit {
-                        for u in calc[i+1].unit {
-                            calc[i-1].unit.append(Unit(unit: u.unit, prefix: u.prefix, factor: -u.factor))
+                    if calc[i].string == "+" {
+                        if calc.isInteger {
+                            let left = calc[i-1].integer
+                            let right = calc[i+1].integer
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: Int(x_factor)*left+Int(y_factor)*right, range: calc[i-1].range)
+                        } else {
+                            let left = calc[i-1].getDouble
+                            let right = calc[i+1].getDouble
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: x_factor*left+y_factor*right, range: calc[i-1].range)
+                        }
+                    } else if calc[i].string == "-" {
+                        if calc.isInteger {
+                            let left = calc[i-1].integer
+                            let right = calc[i+1].integer
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: Int(x_factor)*left-Int(y_factor)*right, range: calc[i-1].range)
+                        } else {
+                            let left = calc[i-1].getDouble
+                            let right = calc[i+1].getDouble
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: x_factor*left-y_factor*right, range: calc[i-1].range)
                         }
                     }
+                    calc[i-1].unit = final_unit
+                    calc.remove(at: i+1)
+                    calc.remove(at: i)
+                    i-=1
+                } else {
+                    calc = [CalcElement(string: "", range: NSMakeRange(0, 0), error: Constants.UNIT_ERROR)]
+                    return
                 }
-                arrangeUnits(&calc[i-1])
-                calc.remove(at: i+1)
-                calc.remove(at: i)
-                i-=1
             }
         }
         i+=1

@@ -6,6 +6,8 @@
 //
 
 // FIND A WAY TO CREATE A SCROLL VIEW WITH 2 TEXTVIEWS INSIDE
+// MATH ON SAME UNIT BUT DIFFERENT PREFIX SHOULD WORK
+// COLORING OF UNITS NOT PERFECT -> mm/kL
 
 import Cocoa
 import Numerics
@@ -57,6 +59,7 @@ struct Constants {
     static let BINARY_OVERFLOW_ERROR = 6
     static let REPRESENTATION_ERROR = 7
     static let DIVIDE_ZERO_ERROR = 8
+    static let UNIT_ERROR = 9
 }
 
 struct CalcElement {
@@ -796,6 +799,8 @@ func getErrorMessage(_ error: Int) -> String {
             return "Number can't be represented!"
         case Constants.DIVIDE_ZERO_ERROR:
             return "Can't divide by 0!"
+        case Constants.CONVERSION_ERROR:
+            return "Conversion error!"
         default:
             return "Error!"
     }
