@@ -5,6 +5,8 @@
 //  Created by Cyprien Heusse on 24/09/2021.
 //
 
+// TODO -> VÉRIFIER QUE RÉSULTAT DIV N'EST PAS UN FLOAT
+
 import Foundation
 import Cocoa
 
@@ -12,9 +14,9 @@ func doMath(calc: inout [CalcElement]) {
     doFactorial(calc: &calc)
     doFunctions(calc: &calc)
     doScientificNotation(calc: &calc)
-    doPower(calc: &calc, 0)
     doNegative(calc: &calc)
     doImplicit(calc: &calc)
+    doPower(calc: &calc, 0)
     doMultDiv(calc: &calc)
     doPlusMinus(calc: &calc)
     doBitShifts(calc: &calc)
@@ -29,24 +31,37 @@ func doPower(calc: inout [CalcElement], _ start: Int) {
     var i = start+1
     while i < calc.count-1 {
         if calc[i].string == "^" || calc[i].string == "**" {
-            if calc[i+1].string.isNumber {
+            if calc[i+1].hasValue {
                 if i < calc.count-2 && (calc[i+2].string == "^" || calc[i+2].string == "**") {
                     doPower(calc: &calc, i+1)
                 }
-                let right = Double(calc[i+1].string.toNumber)
-                if calc[i-1].string.isNumber {
-                    let left = Double(calc[i-1].string.toNumber)
-                    calc[i-1].string = toSystem(system: calc[i-1].string.system,
-                                              result: String(pow(left, right)))
-                    if calc[i-1].hasUnit && calc[i+1].string.isInteger {
-                        for u in 0...calc[i-1].unit.count-1 {
-                            calc[i-1].unit[u].factor *= right
+                if calc[i-1].hasValue {
+                    if(calc[i+1].isReal || calc[i-1].isReal || (calc[i+1].isInteger && calc[i+1].integer < 0)) {
+                        let right = (calc[i+1].isReal) ? calc[i+1].real : Double(calc[i+1].integer)
+                        let left = (calc[i-1].isReal) ? calc[i-1].real : Double(calc[i-1].integer)
+                        calc[i-1].real = pow(left, right)
+                        calc[i-1].isReal = true
+                        calc[i-1].isInteger = false
+                        if calc[i-1].hasUnit && calc[i+1].isInteger {
+                            for u in 0...calc[i-1].unit.count-1 {
+                                calc[i-1].unit[u].factor *= Double(right)
+                            }
+                        }
+                    } else {        // TODO: Check that the result is smaller than Int.max somehow
+                        let right = calc[i+1].integer
+                        let left = calc[i-1].integer
+                        calc[i-1].integer = Int(pow(Double(left), Double(right)))
+                        if calc[i-1].hasUnit && calc[i+1].isInteger {
+                            for u in 0...calc[i-1].unit.count-1 {
+                                calc[i-1].unit[u].factor *= Double(right)
+                            }
                         }
                     }
-                } else if calc[i-1].string == "e" {
+                    
+                }/* else if calc[i-1].string == "e" {
                     calc[i-1].string = toSystem(system: calc[i+1].string.system,
                                               result: String(exp(right)))
-                }
+                }*/
                 calc.remove(at: i+1)
                 calc.remove(at: i)
                 i-=1
@@ -119,21 +134,22 @@ func doMultDiv(calc: inout [CalcElement]) {
         if calc[i].string == "*" || calc[i].string == "/" {
             if calc[i-1].hasValue && calc[i+1].hasValue {
                 if calc[i].string == "*" {
+                    let result = getMultiplicationUnit(calc[i-1].unit, calc[i+1].unit)
+                    calc[i-1].unit = result.0
                     if calc.isInteger {
                         let left = calc[i-1].integer
                         let right = calc[i+1].integer
                         calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left*right, range: calc[i-1].range)
+                        calc[i-1].integer *= Int(pow(10, result.1))
                     } else {
                         let left = calc[i-1].getDouble
                         let right = calc[i+1].getDouble
                         calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left*right, range: calc[i-1].range)
-                    }
-                    if calc[i+1].hasUnit {
-                        for u in calc[i+1].unit {
-                            calc[i-1].unit.append(u)
-                        }
+                        calc[i-1].real *= pow(10, result.1)
                     }
                 } else if calc[i].string == "/" {
+                    let result = getMultiplicationUnit(calc[i-1].unit, calc[i+1].unit.map { Unit(unit: $0.unit, prefix: $0.prefix, factor: -$0.factor) })
+                    calc[i-1].unit = result.0
                     if calc.isInteger {
                         let left = calc[i-1].integer
                         let right = calc[i+1].integer
@@ -142,6 +158,7 @@ func doMultDiv(calc: inout [CalcElement]) {
                         } else {
                             calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
                         }
+                        calc[i-1].integer *= Int(pow(10, result.1))
                     } else {
                         let left = calc[i-1].getDouble
                         let right = calc[i+1].getDouble
@@ -150,14 +167,11 @@ func doMultDiv(calc: inout [CalcElement]) {
                         } else {
                             calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
                         }
-                    }
-                    if calc[i+1].hasUnit {
-                        for u in calc[i+1].unit {
-                            calc[i-1].unit.append(Unit(unit: u.unit, prefix: u.prefix, factor: -u.factor))
-                        }
+                        calc[i-1].real *= pow(10, result.1)
                     }
                 }
-                arrangeUnits(&calc[i-1])
+                //arrangeUnits(&calc[i-1])
+                
                 calc.remove(at: i+1)
                 calc.remove(at: i)
                 i-=1
@@ -177,7 +191,7 @@ func doPlusMinus(calc: inout [CalcElement]) {
                     var x_factor: Double = 1
                     var y_factor: Double = 1
                     if calc[i-1].hasUnit {
-                        let result = getAdditionUnit(calc[i-1], calc[i+1])
+                        let result = getAdditionUnit(calc[i-1].unit, calc[i+1].unit)
                         if result.0 {
                             final_unit = calc[i+1].unit
                             x_factor = pow(10, result.1)

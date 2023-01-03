@@ -333,18 +333,49 @@ func findUnit(calc: inout [CalcElement], start: Int) -> CalcElement {
     return new_calc[0]
 }
 
-func getAdditionUnit(_ x: CalcElement, _ y: CalcElement) -> (Bool, Double) {
+func getMultiplicationUnit(_ x: [Unit], _ y: [Unit]) -> ([Unit], Double) {
+    var c1 = x
+    var c2 = y
+    var u: [Unit] = []
+    var factor: Double = 0
+    if c1.count > 0 && c2.count > 0 {
+        for i in 0...c1.count-1 {
+            for j in 0...c2.count-1 {
+                if c1[i].unit.name == c2[j].unit.name {
+                    if(c1[i].prefix.factor < c2[j].prefix.factor) {
+                        c1[i].factor += c2[j].factor
+                        factor += Double(c2[j].prefix.factor-c1[i].prefix.factor)*(y[j].factor)
+                        u.append(c1[i])
+                    } else {
+                        c2[j].factor += c1[i].factor
+                        factor += Double(c1[i].prefix.factor-c2[j].prefix.factor)*(x[i].factor)
+                        u.append(c2[j])
+                    }
+                }
+            }
+        }
+    }
+    return (u, factor)
+}
+
+
+// 3mm*dL*K
+// 4m/L
+
+func getAdditionUnit(_ x: [Unit], _ y: [Unit]) -> (Bool, Double) {
     var factor_x: Double = 0
     var factor_y: Double = 0
-    for u in x.unit {
+    for u in x {
         factor_x += u.factor*Double(u.prefix.factor)
     }
-    for u in y.unit {
+    for u in y {
         factor_y += u.factor*Double(u.prefix.factor)
     }
     return (factor_x > factor_y, abs(factor_x - factor_y))
 }
 
+
+// COLORIAGE CHELOU
 func doUnits(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count {
@@ -368,7 +399,7 @@ func doUnits(calc: inout [CalcElement]) {
                     break;
                 }
             }
-           
+            doPowerSeparation(calc: &calc)
             if unit.name != "null" && (prefix.name != "null" || (prefix.name == "null" && unit.symbol == calc[i].string)) {
                 if prefix.name == "null" {
                     prefix = Prefixes.first(where: {$0.factor == 0})!
@@ -384,13 +415,18 @@ func doUnits(calc: inout [CalcElement]) {
                     }
                     calc[isFirst ? i-1 : i-2].range.length += ulength
                     calc.remove(at: i+1)
-                } else if (i < calc.count-2 && (calc[i+1].string == "^" || calc[i+1].string == "^-") && calc[i+2].isInteger) {
+                } else if (i < calc.count-2 && (calc[i+1].string == "^" || calc[i+1].string == "**") && calc[i+2].isInteger) || (i < calc.count-3 && (calc[i+1].string == "**" || calc[i+1].string == "^") && calc[i+2].string == "-" && calc[i+3].isInteger) {
                     var factor: Double = 0
-                    if calc[i+1].string == "^-" {
-                        ulength += 2+calc[i+2].string.count
-                        factor = -Double(calc[i+2].integer)
+                    if calc[i+1].string == "**" && calc[i+2].string == "-" {
+                        ulength += 3+calc[i+3].string.count
+                        factor = -Double(calc[i+3].integer)
+                        calc.remove(at: i+3)
+                    } else if calc[i+1].string == "^" && calc[i+2].string == "-" {
+                        ulength += 2+calc[i+3].string.count
+                        factor = -Double(calc[i+3].integer)
+                        calc.remove(at: i+3)
                     } else {
-                        ulength += 1+calc[i+2].string.count
+                        ulength += calc[i+1].string.count+calc[i+2].string.count
                         factor = Double(calc[i+2].integer)
                     }
                     if factor != 0 {
@@ -405,7 +441,7 @@ func doUnits(calc: inout [CalcElement]) {
                         finalUnit.factor = -1
                     }
                     calc[isFirst ? i-1 : i-2].unit.append(finalUnit)
-                    calc[isFirst ? i-1 : i-2].range.length = ulength
+                    calc[isFirst ? i-1 : i-2].range.length += ulength
                 }
                 arrangeUnits(&calc[isFirst ? i-1 : i-2])
                 calc.remove(at: i)
@@ -486,5 +522,19 @@ func arrangeUnits(_ x: inout CalcElement) {
             }
         }
         i += 1
+    }
+}
+
+func doPowerSeparation(calc: inout [CalcElement]) {
+    var i = 0
+    while i<calc.count {
+        if calc[i].string == "^-" {
+            calc.insert(CalcElement(string: "^", range: calc[i].range), at: i)
+            calc[i+1].string = "-"
+            calc[i+1].range.length -= 1
+            calc[i].range.length -= 1
+            i+=1
+        }
+        i+=1
     }
 }

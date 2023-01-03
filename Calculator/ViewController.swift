@@ -9,9 +9,10 @@
 // MATH ON SAME UNIT BUT DIFFERENT PREFIX SHOULD WORK
 // COLORING OF UNITS NOT PERFECT -> mm/kL
 
+// MULTIPLYING/DIVIDING UNIT BY NO UNIT
+
 import Cocoa
 import Numerics
-//import PerfectPCRE2
 
 struct CalcVariable {
     let name: String
@@ -84,7 +85,7 @@ struct ColorElement {
 
 class ViewController: NSViewController, NSTextViewDelegate {
     let functions = ["e", "exp", "sqrt", "root", "ln", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sin", "cos", "tan", "asin", "acos", "atan", "log", "round", "ceil", "floor", "abs", "arg"]
-    let constants = ["pi", "c", "h", "Na"]
+    let constants_list = ["pi", "c", "h", "Na"]
     let fontAttributes = [NSAttributedString.Key.font: NSFont(name: "Fira Code", size: 13.0)!]
     let greenColor = NSColor(red: 10/255, green: 190/255, blue: 50/255, alpha: 1)
     var lines: [String] = []                        // Contains the text of each line, raw
@@ -94,7 +95,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
     var results: [String] = []                      // Results of the calculation of each line -> probably should be more than just a string ?
     var variables: [CalcVariable] = []              // List of user defined variables; a=2
     var funcs: [CalcFunctions] = []                 // List of user defined functions; f(x)=4x
-    var contains_func_var: [Bool] = []                  // If line i contains function OR VARIABLE
+    var contains_func_var: [Bool] = []              // If line i contains function OR VARIABLE
     var prev_str = ""                               // Text of the whole previous text
     var prev_factors: [[NSRange]] = []              // ???
     var factors_range: [[NSRange]] = []             // ???
@@ -302,6 +303,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 colorInput(calc: &calc, line: l)
                 doComments(calc: &calc, line: l)
                 doDoubleOperator(calc: &calc)
+                doPowerSeparation(calc: &calc)
                 removeUseless(calc: &calc)
                 doSimplifications(calc: &calc)
             }
@@ -322,7 +324,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doParenthesis(calc: &calc, 0)
                             doMath(calc: &calc)
                             doConversions(calc: &calc)
-                            
                             doCurrencyConversions(calc: &calc)
                             doVariablesDefinition(calc: &calc, line: l)
                         }
@@ -339,9 +340,10 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             results[l] = calc[0].complex.toString
                         } else if calc[0].hasValue {
                             if calc[0].isInteger {
-                                results[l] = String(calc[0].integer)
+                                results[l] = String(calc[0].integer)    // TODO: scientific notation for big numbers ?
                             } else if calc[0].isReal {
-                                results[l] = String(format: "%g", smartRounding(calc[0].real))
+                                //results[l] = String(format: "%g", smartRounding(calc[0].real))
+                                results[l] = calc[0].real.scientificFormatted
                             }
                             if calc[0].hasUnit {
                                 results[l] += " "
@@ -408,7 +410,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
             if functions.contains(where: {$0 == e.string}) {
                 lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0xD22B2B, alpha: 1.0), range: e.range))
             }
-            if constants.contains(where: {$0 == e.string}) {
+            if constants_list.contains(where: {$0 == e.string}) {
                 lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0x6B8187, alpha: 1.0), range: e.range))
             }
             if funcs.contains(where: {$0.name == e.string}) {
@@ -511,7 +513,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
             if calc[1].string == "=" && calc[0].string.isText && calc[2].string.isNumber {
                 var first = [calc[0]]
                 let ucalc = findUnit(calc: &first, start: 0)
-                if Units.contains(where: { $0.symbol == calc[0].string}) || constants.contains(calc[0].string) || funcs.contains(where: { $0.name == calc[0].string}) || (variables.contains(where: { $0.name == calc[0].string}) && variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line != line) || ucalc.hasUnit {
+                if Units.contains(where: { $0.symbol == calc[0].string}) || constants_list.contains(calc[0].string) || funcs.contains(where: { $0.name == calc[0].string}) || (variables.contains(where: { $0.name == calc[0].string}) && variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line != line) || ucalc.hasUnit {
                     setError(calc: &calc, error: Constants.NAME_ERROR)
                     return
                 } else {
@@ -554,7 +556,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 calc.count >= 6 && calc[3].string == ")" && calc[4].string.starts(with: "=")  {
                 var first = [calc[0]]
                 let ucalc = findUnit(calc: &first, start: 0)
-                if Units.contains(where: { $0.symbol == calc[0].string}) || constants.contains(calc[0].string) || variables.contains(where: { $0.name == calc[0].string}) || (funcs.contains(where: { $0.name == calc[0].string}) && func_var_defs[func_var_defs.firstIndex(where: {$0.name == calc[0].string }) ?? 0].line != line) || ucalc.hasUnit {
+                if Units.contains(where: { $0.symbol == calc[0].string}) || constants_list.contains(calc[0].string) || variables.contains(where: { $0.name == calc[0].string}) || (funcs.contains(where: { $0.name == calc[0].string}) && func_var_defs[func_var_defs.firstIndex(where: {$0.name == calc[0].string }) ?? 0].line != line) || ucalc.hasUnit {
                     setError(calc: &calc, error: Constants.NAME_ERROR)
                 } else {
                     let n = calc[0].string
@@ -674,13 +676,17 @@ class ViewController: NSViewController, NSTextViewDelegate {
         var i = 0
         while i < calc.count {
             if calc[i].string == "pi" {
-                calc[i].string = String(Double.pi)
+                calc[i].real = Double.pi
+                calc[i].isReal = true
             } else if calc[i].string == "c" {
-                calc[i].string = String(299792458)
+                calc[i].integer = 299792458
+                calc[i].isInteger = true
             } else if calc[i].string == "h" {
-                calc[i].string = String(6.62607015e-34)
+                calc[i].real = 6.62607015e-34
+                calc[i].isReal = true
             } else if calc[i].string == "Na" {
-                calc[i].string = String(6.02214076e23)
+                calc[i].real = 6.02214076e23
+                calc[i].isReal = true
             }
             i+=1
         }
@@ -704,7 +710,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
-    func doAngles(calc: inout [CalcElement]) {
+    func doAngles(calc: inout [CalcElement]) {  // TODO: update to int/double system
         var i = 1
         while i < calc.count {
             if calc[i-1].string.isNumber {
