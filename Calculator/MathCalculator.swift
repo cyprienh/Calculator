@@ -5,8 +5,6 @@
 //  Created by Cyprien Heusse on 24/09/2021.
 //
 
-// TODO -> VÉRIFIER QUE RÉSULTAT DIV N'EST PAS UN FLOAT
-
 import Foundation
 import Cocoa
 
@@ -39,6 +37,7 @@ func doPower(calc: inout [CalcElement], _ start: Int) {
                     if(calc[i+1].isReal || calc[i-1].isReal || (calc[i+1].isInteger && calc[i+1].integer < 0)) {
                         let right = (calc[i+1].isReal) ? calc[i+1].real : Double(calc[i+1].integer)
                         let left = (calc[i-1].isReal) ? calc[i-1].real : Double(calc[i-1].integer)
+                        
                         calc[i-1].real = pow(left, right)
                         calc[i-1].isReal = true
                         calc[i-1].isInteger = false
@@ -47,13 +46,18 @@ func doPower(calc: inout [CalcElement], _ start: Int) {
                                 calc[i-1].unit[u].factor *= Double(right)
                             }
                         }
-                    } else {        // TODO: Check that the result is smaller than Int.max somehow
+                    } else {
                         let right = calc[i+1].integer
                         let left = calc[i-1].integer
-                        calc[i-1].integer = Int(pow(Double(left), Double(right)))
-                        if calc[i-1].hasUnit && calc[i+1].isInteger {
-                            for u in 0...calc[i-1].unit.count-1 {
-                                calc[i-1].unit[u].factor *= Double(right)
+                        let power = pow(Double(left), Double(right))
+                        if power < Double(Int.min) || power >= Double(Int.max) {
+                            calc[i-1].error = Constants.TOO_BIG_ERROR
+                        } else {
+                            calc[i-1].integer = Int(power)
+                            if calc[i-1].hasUnit && calc[i+1].isInteger {
+                                for u in 0...calc[i-1].unit.count-1 {
+                                    calc[i-1].unit[u].factor *= Double(right)
+                                }
                             }
                         }
                     }
@@ -136,7 +140,7 @@ func doMultDiv(calc: inout [CalcElement]) {
                 if calc[i].string == "*" {
                     let result = getMultiplicationUnit(calc[i-1].unit, calc[i+1].unit)
                     calc[i-1].unit = result.0
-                    if calc.isInteger {
+                    if calc.isInteger && result.1 >= 0 {
                         let left = calc[i-1].integer
                         let right = calc[i+1].integer
                         calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left*right, range: calc[i-1].range)
@@ -150,25 +154,16 @@ func doMultDiv(calc: inout [CalcElement]) {
                 } else if calc[i].string == "/" {
                     let result = getMultiplicationUnit(calc[i-1].unit, calc[i+1].unit.map { Unit(unit: $0.unit, prefix: $0.prefix, factor: -$0.factor) })
                     calc[i-1].unit = result.0
-                    if calc.isInteger {
-                        let left = calc[i-1].integer
-                        let right = calc[i+1].integer
-                        if right != 0 {
-                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left/right, range: calc[i-1].range)
-                        } else {
-                            calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
-                        }
-                        calc[i-1].integer *= Int(pow(10, result.1))
+                    
+                    let left = calc[i-1].getDouble
+                    let right = calc[i+1].getDouble
+                    if right != 0 {
+                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left/right, range: calc[i-1].range)
                     } else {
-                        let left = calc[i-1].getDouble
-                        let right = calc[i+1].getDouble
-                        if right != 0 {
-                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left/right, range: calc[i-1].range)
-                        } else {
-                            calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
-                        }
-                        calc[i-1].real *= pow(10, result.1)
+                        calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
                     }
+                    calc[i-1].real *= pow(10, result.1)
+                    
                 }
                 //arrangeUnits(&calc[i-1])
                 
@@ -300,21 +295,11 @@ func doSimplifications(calc: inout [CalcElement]) {
 
 /// Convert whatever deg to rad for trigonometric function
 /// - Parameter calc: calc array
-func doDegRad(calc: inout [CalcElement]) {
-    var i = 0
-    while i < calc.count-1 {
-        if calc[i+1].string.isNumber {
-            if i < calc.count-2 {
-                if calc[i+2].string == "deg" || calc[i+2].string == "°" {
-                    calc[i+1] = CalcElement(string: "", isReal: true, real: calc[i+1].getDouble*Double.pi/180, range: calc[i+1].range)
-                    calc.remove(at: i+2)
-                } else if calc[i+2].string == "rad" {
-                    calc.remove(at: i+2)
-                }
-            }
-        }
-        i+=1
+func doDegRad(_ e: CalcElement) -> Double {
+    if e.unit.contains(where: {$0.unit.name == "degree" && $0.factor == 1}) {
+        return e.getDouble*Double.pi/180.0
     }
+    return e.getDouble
 }
 
 func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF THE TIME
@@ -363,13 +348,13 @@ func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF TH
                 calc[i] = CalcElement(string: "", isReal: true, real: atanh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "sin" {
-                calc[i] = CalcElement(string: "", isReal: true, real: sin(fin), range: calc[i].range)
+                calc[i] = CalcElement(string: "", isReal: true, real: sin(doDegRad(calc[i+1])), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "cos" {
-                calc[i] = CalcElement(string: "", isReal: true, real: cos(fin), range: calc[i].range)
+                calc[i] = CalcElement(string: "", isReal: true, real: cos(doDegRad(calc[i+1])), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "tan" {
-                calc[i] = CalcElement(string: "", isReal: true, real: tan(fin), range: calc[i].range)
+                calc[i] = CalcElement(string: "", isReal: true, real: tan(doDegRad(calc[i+1])), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "asin" {
                 calc[i] = CalcElement(string: "", isReal: true, real: asin(fin), range: calc[i].range)

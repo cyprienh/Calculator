@@ -82,7 +82,9 @@ let Units: [UnitName] = [
     UnitName(name: "byte", symbol: "o", hasPrefix: true, canFactor: false),
     UnitName(name: "bit", symbol: "b", hasPrefix: true, canFactor: false),
     UnitName(name: "foot", symbol: "'", hasPrefix: false, canFactor: true),
-    UnitName(name: "inch", symbol: "\"", hasPrefix: false, canFactor: true)
+    UnitName(name: "inch", symbol: "\"", hasPrefix: false, canFactor: true),
+    UnitName(name: "degree", symbol: "°", hasPrefix: false, canFactor: true),
+    UnitName(name: "radian", symbol: "rad", hasPrefix: false, canFactor: true)
 ]
 
 func unitConversions(_ from: CalcElement, to: [Unit]) -> CalcElement {
@@ -102,6 +104,23 @@ func unitConversions(_ from: CalcElement, to: [Unit]) -> CalcElement {
             && from.unit.first(where: {$0.unit.name == "fahrenheit"})?.factor == 1 {
             new_element.real = 5/9*(from.getDouble-32)
             new_element.unit = from.unit.map({ $0.unit.name == "fahrenheit" ? Unit(unit: Units.first(where: {$0.name == "celsius"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
+        }
+    }
+    if from.unit.contains(where: {$0.unit.name == "degree"}) && to.contains(where: {$0.unit.name == "radian"}) {
+        if from.unit.first(where: {$0.unit.name == "degree"})?.factor == to.first(where: {$0.unit.name == "radian"})?.factor
+            && from.unit.first(where: {$0.unit.name == "degree"})?.factor == 1 {
+            new_element.real = from.getDouble*Double.pi/180.0
+            new_element.unit = from.unit.map({ $0.unit.name == "degree" ? Unit(unit: Units.first(where: {$0.name == "radian"})!, prefix: $0.prefix) : $0 })
+        } else {
+            new_element.error = Constants.CONVERSION_ERROR;
+        }
+    } else if from.unit.contains(where: {$0.unit.name == "radian"}) && to.contains(where: {$0.unit.name == "degree"}) {
+        if from.unit.first(where: {$0.unit.name == "radian"})?.factor == to.first(where: {$0.unit.name == "degree"})?.factor
+            && from.unit.first(where: {$0.unit.name == "radian"})?.factor == 1 {
+            new_element.real = from.getDouble*180.0/Double.pi
+            new_element.unit = from.unit.map({ $0.unit.name == "radian" ? Unit(unit: Units.first(where: {$0.name == "degree"})!, prefix: $0.prefix) : $0 })
         } else {
             new_element.error = Constants.CONVERSION_ERROR;
         }
@@ -352,6 +371,20 @@ func getMultiplicationUnit(_ x: [Unit], _ y: [Unit]) -> ([Unit], Double) {
                         u.append(c2[j])
                     }
                 }
+            }
+        }
+    }
+    if c1.count > 0 {
+        for i in 0...c1.count-1 {
+            if !u.map({ $0.unit.name }).contains(c1[i].unit.name) {
+                u.append(c1[i])
+            }
+        }
+    }
+    if c2.count > 0 {
+        for i in 0...c2.count-1 {
+            if !u.map({ $0.unit.name }).contains(c2[i].unit.name) {
+                u.append(c2[i])
             }
         }
     }

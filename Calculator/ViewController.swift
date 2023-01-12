@@ -5,11 +5,7 @@
 //  Created by Cyprien Heusse on 09/09/2021.
 //
 
-// FIND A WAY TO CREATE A SCROLL VIEW WITH 2 TEXTVIEWS INSIDE
-// MATH ON SAME UNIT BUT DIFFERENT PREFIX SHOULD WORK
-// COLORING OF UNITS NOT PERFECT -> mm/kL
-
-// MULTIPLYING/DIVIDING UNIT BY NO UNIT
+// TODO: cos/sin/tan with pi to be exact -> catch pi before translation and check coefficient
 
 import Cocoa
 import Numerics
@@ -44,7 +40,6 @@ struct AppVariables {
     static var representation = 0
 }
 
-
 struct Constants {
     static let SIGNED = 1
     static let UNSIGNED = 0
@@ -61,6 +56,7 @@ struct Constants {
     static let REPRESENTATION_ERROR = 7
     static let DIVIDE_ZERO_ERROR = 8
     static let UNIT_ERROR = 9
+    static let TOO_BIG_ERROR = 10
 }
 
 struct CalcElement {
@@ -320,7 +316,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doUnitsConversions(calc: &calc)
                             doParenthesis(calc: &calc, 0)
                             doGreekLetters(calc: &calc)
-                            doDegRad(calc: &calc)
                             doParenthesis(calc: &calc, 0)
                             doMath(calc: &calc)
                             doConversions(calc: &calc)
@@ -687,6 +682,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
             } else if calc[i].string == "Na" {
                 calc[i].real = 6.02214076e23
                 calc[i].isReal = true
+            } else if calc[i].string == "e" {
+                calc[i].real = Double.exp(1)
+                calc[i].isReal = true
             }
             i+=1
         }
@@ -705,21 +703,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 calc[i].string = "δ"
             } else if calc[i].string == "\\epsilon" {
                 calc[i].string = "ε"
-            }
-            i+=1
-        }
-    }
-    
-    func doAngles(calc: inout [CalcElement]) {  // TODO: update to int/double system
-        var i = 1
-        while i < calc.count {
-            if calc[i-1].string.isNumber {
-                if calc[i].string == "rad" {
-                    calc.remove(at: i)
-                } else if calc[i].string == "deg" || calc[i].string == "°" {
-                    calc[i-1].string = String(Double(calc[i-1].string.toNumber)*Double.pi/180)
-                    calc.remove(at: i)
-                }
             }
             i+=1
         }
@@ -807,6 +790,10 @@ func getErrorMessage(_ error: Int) -> String {
             return "Can't divide by 0!"
         case Constants.CONVERSION_ERROR:
             return "Conversion error!"
+        case Constants.TOO_BIG_ERROR:
+            return "Number too big!"
+        case Constants.UNIT_ERROR:
+            return "The units do not match!"
         default:
             return "Error!"
     }
