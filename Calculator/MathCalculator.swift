@@ -17,6 +17,8 @@ func doMath(calc: inout [CalcElement]) {
     doPower(calc: &calc, 0)
     doMultDiv(calc: &calc)
     doPlusMinus(calc: &calc)
+    
+    // Logic calculator TODO: separate file ?
     doBitShifts(calc: &calc)
     doNOT(calc: &calc)
     doAND(calc: &calc)
@@ -51,7 +53,8 @@ func doPower(calc: inout [CalcElement], _ start: Int) {
                         let left = calc[i-1].integer
                         let power = pow(Double(left), Double(right))
                         if power < Double(Int.min) || power >= Double(Int.max) {
-                            calc[i-1].error = Constants.TOO_BIG_ERROR
+                            setError(calc: &calc, error: Constants.TOO_BIG_ERROR)
+                            return
                         } else {
                             calc[i-1].integer = Int(power)
                             if calc[i-1].hasUnit && calc[i+1].isInteger {
@@ -159,11 +162,11 @@ func doMultDiv(calc: inout [CalcElement]) {
                     let right = calc[i+1].getDouble
                     if right != 0 {
                         calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left/right, range: calc[i-1].range)
+                        calc[i-1].real *= pow(10, result.1)
                     } else {
-                        calc[i-1] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                        setError(calc: &calc, error: Constants.DIVIDE_ZERO_ERROR)
+                        return
                     }
-                    calc[i-1].real *= pow(10, result.1)
-                    
                 }
                 //arrangeUnits(&calc[i-1])
                 
@@ -221,7 +224,7 @@ func doPlusMinus(calc: inout [CalcElement]) {
                     calc.remove(at: i)
                     i-=1
                 } else {
-                    calc = [CalcElement(string: "", range: NSMakeRange(0, 0), error: Constants.UNIT_ERROR)]
+                    setError(calc: &calc, error: Constants.UNIT_ERROR)
                     return
                 }
             }
@@ -241,7 +244,8 @@ func doDivisionRest(calc: inout [CalcElement]) {
                     if right != 0 {
                         calc[i] = CalcElement(string: "", isInteger: true, integer: left % right, range: calc[i].range)
                     } else {
-                        calc[i] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                        setError(calc: &calc, error: Constants.DIVIDE_ZERO_ERROR)
+                        return
                     }
                 } else {
                     let left = calc[i-1].getDouble
@@ -249,7 +253,8 @@ func doDivisionRest(calc: inout [CalcElement]) {
                     if right != 0 {
                         calc[i] = CalcElement(string: "", isReal: true, real: left.truncatingRemainder(dividingBy: right), range: calc[i].range)
                     } else {
-                        calc[i] = CalcElement(string: "", range: calc[i].range, error: Constants.DIVIDE_ZERO_ERROR)
+                        setError(calc: &calc, error: Constants.DIVIDE_ZERO_ERROR)
+                        return
                     }
                 }
                 calc.remove(at: i+1)

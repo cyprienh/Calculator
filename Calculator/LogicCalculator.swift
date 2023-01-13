@@ -18,14 +18,14 @@ func doBitShifts(calc: inout [CalcElement]) {
                 if isValidInteger(left) && isValidInteger(right) {
                     if calc[i].string == ">>" {
                         if isValidInteger(left >> right) {
-                            calc[i] = CalcElement(string: "", isInteger: true, integer: left >> right, range: calc[i].range)
+                            calc[i] = CalcElement(string: "", isInteger: true, integer: left >> right, representation: calc[i-1].representation, range: calc[i].range)
                         } else {
                             setError(calc: &calc, error: Constants.REPRESENTATION_ERROR)
                             return
                         }
                     } else if calc[i].string == "<<" {
                         if isValidInteger(left << right) {
-                            calc[i] = CalcElement(string: "", isInteger: true, integer: left << right, range: calc[i].range)
+                            calc[i] = CalcElement(string: "", isInteger: true, integer: left << right, representation: calc[i-1].representation, range: calc[i].range)
                         } else {
                             setError(calc: &calc, error: Constants.REPRESENTATION_ERROR)
                             return
@@ -52,7 +52,7 @@ func doOR(calc: inout [CalcElement]) {
                 let left = calc[i-1].integer
                 let right = calc[i+1].integer
                 if isValidInteger(left) && isValidInteger(right) {
-                    calc[i] = CalcElement(string: "", isInteger: true, integer: left | right, range: calc[i].range)
+                    calc[i] = CalcElement(string: "", isInteger: true, integer: left | right, representation: calc[i-1].representation, range: calc[i].range)
                     calc.remove(at: i+1)
                     calc.remove(at: i-1)
                     i=i-1
@@ -74,7 +74,7 @@ func doAND(calc: inout [CalcElement]) {
                 let left = calc[i-1].integer
                 let right = calc[i+1].integer
                 if isValidInteger(left) && isValidInteger(right) {
-                    calc[i] = CalcElement(string: "", isInteger: true, integer: left & right, range: calc[i].range)
+                    calc[i] = CalcElement(string: "", isInteger: true, integer: left & right, representation: calc[i-1].representation, range: calc[i].range)
                     calc.remove(at: i+1)
                     calc.remove(at: i-1)
                     i=i-1
@@ -96,7 +96,7 @@ func doXOR(calc: inout [CalcElement]) {
                 let left = calc[i-1].integer
                 let right = calc[i+1].integer
                 if isValidInteger(left) && isValidInteger(right) {
-                    calc[i] = CalcElement(string: "", isInteger: true, integer: left ^ right, range: calc[i].range)
+                    calc[i] = CalcElement(string: "", isInteger: true, integer: left ^ right, representation: calc[i-1].representation, range: calc[i].range)
                     calc.remove(at: i+1)
                     calc.remove(at: i-1)
                     i=i-1
@@ -117,7 +117,7 @@ func doNOT(calc: inout [CalcElement]) {
             if calc[i+1].isInteger {
                 let right = Int(calc[i+1].string.toNumber)
                 if isValidInteger(right) {
-                    calc[i] = CalcElement(string: "", isInteger: true, integer: !right, range: calc[i].range)
+                    calc[i] = CalcElement(string: "", isInteger: true, integer: !right, representation: calc[i-1].representation, range: calc[i].range)
                     calc.remove(at: i+1)
                 } else {
                     setError(calc: &calc, error: Constants.REPRESENTATION_ERROR)
@@ -131,6 +131,6 @@ func doNOT(calc: inout [CalcElement]) {
 
 func isValidInteger(_ x: Int) -> Bool {
     let max = Int(pow(Double(2), Double(AppVariables.bits)))
-    return ((AppVariables.representation == Constants.SIGNED && x >= (-max/2) && x < (max/2))
-        || (AppVariables.representation == Constants.UNSIGNED && x >= 0 && x < max))
+    return ((AppVariables.signed && x >= (-max/2) && x < (max/2))
+        || (!AppVariables.signed && x >= 0 && x < max))
 }

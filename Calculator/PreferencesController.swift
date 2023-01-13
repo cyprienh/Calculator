@@ -10,7 +10,7 @@ import Cocoa
 class PreferencesController: NSViewController, NSTextFieldDelegate, NSWindowDelegate {
     
     var wantedSeparator: Int = AppVariables.separator
-    var wantedRepresentation: Int = AppVariables.representation
+    var wantedRepresentation: Bool = AppVariables.signed
     
     @IBOutlet weak var BitsInput: NSTextField!
     @IBOutlet weak var DigitsInput: NSTextField!
@@ -46,7 +46,7 @@ class PreferencesController: NSViewController, NSTextFieldDelegate, NSWindowDele
             self.DotSeparator.state = NSControl.StateValue(rawValue: 0)
         }
         
-        if AppVariables.representation == 0 {
+        if AppVariables.signed == false {
             self.Unsigned.state = NSControl.StateValue(rawValue: 1)
         } else {
             self.Signed.state = NSControl.StateValue(rawValue: 1)
@@ -70,7 +70,7 @@ class PreferencesController: NSViewController, NSTextFieldDelegate, NSWindowDele
     }
     
     @IBAction func Representation(_ sender: Any) {
-        wantedRepresentation = (sender as! NSButton).tag
+        wantedRepresentation = ((sender as! NSButton).tag == 1) ? true : false
     }
     
     func updateSettings() {
@@ -86,7 +86,7 @@ class PreferencesController: NSViewController, NSTextFieldDelegate, NSWindowDele
         defaults.set(wantedSeparator, forKey: "Separator")
         AppVariables.separator = wantedSeparator
         defaults.set(wantedRepresentation, forKey: "Representation")
-        AppVariables.representation = wantedRepresentation
+        AppVariables.signed = wantedRepresentation
         NotificationCenter.default.post(name: Notification.Name(rawValue: "updateCalculator"), object: nil)
         self.view.window?.close()
     }

@@ -37,14 +37,16 @@ struct AppVariables {
     static var digits = 4
     static var bits = 16
     static var separator = 0
-    static var representation = 0
+    static var signed: Bool = false
 }
 
 struct Constants {
-    static let SIGNED = 1
-    static let UNSIGNED = 0
     static let COMMA = 1
     static let DOT = 0
+    
+    static let DEC = 1
+    static let BIN = 2
+    static let HEX = 3
     
     static let NO_ERROR = 0
     static let LOGIC_ERROR = 1
@@ -57,6 +59,7 @@ struct Constants {
     static let DIVIDE_ZERO_ERROR = 8
     static let UNIT_ERROR = 9
     static let TOO_BIG_ERROR = 10
+    static let OUT_BOUNDS_ERROR = 11
 }
 
 struct CalcElement {
@@ -68,6 +71,7 @@ struct CalcElement {
     var real: Double = 0.0
     var isInteger: Bool = false
     var integer: Int = 0
+    var representation: Int = 1
     var range: NSRange
     var error: Int = 0  // No error by default
 }
@@ -77,7 +81,7 @@ struct ColorElement {
     var range: NSRange
 }
 
-// a=10a shouldnt be possible lmao
+// TODO: a=10a shouldnt be possible lmao
 
 class ViewController: NSViewController, NSTextViewDelegate {
     let functions = ["e", "exp", "sqrt", "root", "ln", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sin", "cos", "tan", "asin", "acos", "atan", "log", "round", "ceil", "floor", "abs", "arg"]
@@ -301,6 +305,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 doDoubleOperator(calc: &calc)
                 doPowerSeparation(calc: &calc)
                 removeUseless(calc: &calc)
+                doSettings(calc: &calc)
                 doSimplifications(calc: &calc)
             }
             
@@ -313,6 +318,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doVariablesReplacement(calc: &calc, line: l)
                             doFunctionsReplacement(calc: &calc, line: l)
                             doConstants(calc: &calc)
+                            doUnits(calc: &calc)
                             doUnitsConversions(calc: &calc)
                             doParenthesis(calc: &calc, 0)
                             doGreekLetters(calc: &calc)
@@ -334,12 +340,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                         } else if calc[0].isComplex {
                             results[l] = calc[0].complex.toString
                         } else if calc[0].hasValue {
-                            if calc[0].isInteger {
-                                results[l] = String(calc[0].integer)    // TODO: scientific notation for big numbers ?
-                            } else if calc[0].isReal {
-                                //results[l] = String(format: "%g", smartRounding(calc[0].real))
-                                results[l] = calc[0].real.scientificFormatted
-                            }
+                            results[l] = calc[0].toSystem
                             if calc[0].hasUnit {
                                 results[l] += " "
                                 for (i, u) in calc[0].unit.enumerated() {
@@ -359,8 +360,8 @@ class ViewController: NSViewController, NSTextViewDelegate {
                         } else {
                             results[l] = calc[0].string
                         }
-                    } else if calc.count > 0 && calc[0].string.isNumber {
-                        results[l] = toSystem(system: calc[0].string.system, result: String(calc[0].string.toNumber))
+                    } else if calc.count > 0 && calc[0].hasValue {
+                        results[l] = calc[0].toSystem
                         if calc[0].hasUnit {
                             results[l] += " "
                             for (i, u) in calc[0].unit.enumerated() {
@@ -459,10 +460,31 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
+    func doSettings(calc: inout[CalcElement]) {
+        var i = 4
+        while i<calc.count {
+            if calc[i-1].string == "=" && calc[i-3].string == "." && calc[i-4].string == "settings" {
+                if calc[i-2].string == "bits" && calc[i].isInteger {
+                    AppVariables.bits = calc[i].integer
+                } else if calc[i-2].string == "signed" && calc[i].string.isBool {
+                    AppVariables.signed = calc[i].string.toBool
+                } else if calc[i-2].string == "digits" && calc[i].isInteger {
+                    AppVariables.digits = calc[i].integer
+                } else if calc[i-2].string == "separator" && calc[i].string == "comma" {
+                    AppVariables.separator = Constants.COMMA
+                } else if calc[i-2].string == "separator" && calc[i].string == "dot" {
+                    AppVariables.separator = Constants.DOT
+                }
+                prev_lines = []     // effectively refresh all calcs
+            }
+            i+=1
+        }
+    }
+    
     func doDotSeparation(calc: inout [CalcElement]) {
         var i = 0
         while i<calc.count {
-            if calc[i].string.isNumber && calc[i].string.suffix(1) == "." && calc[i].string != "." {
+            if calc[i].hasValue && calc[i].string.suffix(1) == "." && calc[i].string != "." {
                 calc[i].string = String(calc[i].string.prefix(calc[i].string.count-1))
                 calc[i].range.length -= 1
                 calc.insert(CalcElement(string: ".", range: NSMakeRange(calc[i].range.upperBound, 1)), at: i+1)
@@ -724,8 +746,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                         if let json = try JSONSerialization.jsonObject(with: task.0!, options: []) as? [String: Any] {
                             let rates = json["rates"] as! Dictionary<String, Double>
                             let rate = rates[calc[i+1].string]!
-                            result = toSystem(system: value.system,
-                                                   result: String(valuedouble*rate))+" "+calc[i+1].string
+                            result = String(valuedouble*rate)+" "+calc[i+1].string
                         }
                     } catch let error as NSError {
                         print("Failed to load: \(error.localizedDescription)")

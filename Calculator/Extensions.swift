@@ -23,6 +23,12 @@ extension String {
         let input = self.replacingOccurrences(of: ",", with: ".", options: NSString.CompareOptions.literal, range: nil)
         return Double(input) != nil || self == "." || self == ","
     }
+    var isBool: Bool {
+        return self.lowercased() == "true" || self.lowercased() == "false" || self == "1" || self == "0"
+    }
+    var toBool: Bool {  // Needs to do isBool first
+        return self.lowercased() == "true" || self == "1"
+    }
     var isNumber: Bool {
         let input = self.replacingOccurrences(of: " ", with: "", options: NSString.CompareOptions.literal, range: nil)
         return (input != ".") && (input != ",") && (input.isDouble || input.prefix(2) == "0x" || input.prefix(2) == "0b")
@@ -102,6 +108,45 @@ extension URLSession {
         _ = semaphore.wait(timeout: .distantFuture)
 
         return (data, response, error)
+    }
+}
+
+// TODO: errors on a single element... probably needs to be a function not an extension
+extension CalcElement {
+    var toSystem: String {
+        var final = ""
+        if self.isInteger {
+            if self.representation == Constants.DEC {
+                final = String(self.integer) // TODO: better
+            } else {
+                let p2n = Int(pow(2.0, Double(AppVariables.bits)))   // 2**(MAX_BITS)
+                if(!AppVariables.signed && (self.integer < 0 || self.integer >= p2n)) || (AppVariables.signed && (self.integer < -p2n/2 || self.integer >= p2n/2)) {
+                    return "";
+                }
+                if(AppVariables.signed && self.integer < 0) {
+                    if self.representation == Constants.BIN {
+                        final = "0b"+String(p2n + self.integer, radix: 2)
+                    } else if self.representation == Constants.HEX {
+                        final = "0x"+String(p2n + self.integer, radix: 16)
+                    }
+                } else {
+                    if self.representation == Constants.BIN {
+                        final = "0b"+String(self.integer, radix: 2)
+                    } else if self.representation == Constants.HEX {
+                        final = "0x"+String(self.integer, radix: 16)
+                    }
+                }
+            }
+        } else if self.isReal {
+            if self.representation == Constants.DEC {
+                final = self.real.scientificFormatted
+            } else {
+                return "";
+            }
+        } else if self.isComplex {
+            return ""
+        }
+        return final
     }
 }
 
