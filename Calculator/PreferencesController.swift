@@ -85,7 +85,7 @@ class PreferencesController: NSViewController, NSTextFieldDelegate, NSWindowDele
         }
         defaults.set(wantedSeparator, forKey: "Separator")
         AppVariables.separator = wantedSeparator
-        defaults.set(wantedRepresentation, forKey: "Representation")
+        defaults.set(wantedRepresentation, forKey: "Signed")
         AppVariables.signed = wantedRepresentation
         NotificationCenter.default.post(name: Notification.Name(rawValue: "updateCalculator"), object: nil)
         self.view.window?.close()

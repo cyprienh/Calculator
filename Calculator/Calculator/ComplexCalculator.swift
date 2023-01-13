@@ -8,6 +8,8 @@
 import Foundation
 import Numerics
 
+// TODO: show some love to complex operations
+
 func isComplex(calc: inout [CalcElement]) -> Bool {
     if calc.filter({ $0.string == "i"}).count > 0 {
         return true
@@ -23,7 +25,7 @@ func isComplex(calc: inout [CalcElement]) -> Bool {
 
 func doComplex(calc: inout [CalcElement]) {
     toComplex(calc: &calc)
-    //doComplexConstants(calc: &calc)
+    calcPrint(calc)
     doParenthesis(calc: &calc, 0)
     doComplexMath(calc: &calc)
 }
@@ -79,17 +81,6 @@ func doComplexFunctions(calc: inout [CalcElement]) {
                     i-=1
                 }
             }
-        }
-        i+=1
-    }
-}
-
-func doComplexConstants(calc: inout [CalcElement]) {
-    var i = 0
-    while i < calc.count {
-        if calc[i].string == "pi" {
-            calc[i].isComplex = true
-            calc[i].complex = Complex(Double.pi)
         }
         i+=1
     }
@@ -238,12 +229,18 @@ func doComplexPower(calc: inout [CalcElement]) {
 func toComplex(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count {
-        if calc[i].string.isNumber {
-            calc[i].complex = Complex(calc[i].string.toNumber)
+        if calc[i].hasValue {
+            if calc[i].isInteger {
+                calc[i].complex = Complex(calc[i].integer)
+            } else if calc[i].isReal {
+                calc[i].complex = Complex(calc[i].real)
+            }
             calc[i].isComplex = true
+            calc.toComplex()
         } else if calc[i].string == "i" {
             calc[i].complex = .i
             calc[i].isComplex = true
+            calc.toComplex()
         }
         i+=1
     }

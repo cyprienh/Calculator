@@ -6,6 +6,9 @@
 //
 
 // TODO: cos/sin/tan with pi to be exact -> catch pi before translation and check coefficient
+// TODO: a=10a shouldnt be possible lmao
+// TODO: parenthesis in units :(
+// TODO: what the heck is mm/cm or mm*m ???????? should we error it ? V/V are a thing so idk
 
 import Cocoa
 import Numerics
@@ -81,8 +84,6 @@ struct ColorElement {
     var range: NSRange
 }
 
-// TODO: a=10a shouldnt be possible lmao
-
 class ViewController: NSViewController, NSTextViewDelegate {
     let functions = ["e", "exp", "sqrt", "root", "ln", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sin", "cos", "tan", "asin", "acos", "atan", "log", "round", "ceil", "floor", "abs", "arg"]
     let constants_list = ["pi", "c", "h", "Na"]
@@ -127,6 +128,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         
         let defaults = UserDefaults.standard
         AppVariables.separator = defaults.integer(forKey: "Separator")
+        AppVariables.signed = defaults.bool(forKey: "Signed")
         if isKeyPresentInUserDefaults(key: "Digits") {
             AppVariables.digits = defaults.integer(forKey: "Digits")
         }
@@ -334,52 +336,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doComplex(calc: &calc)
                         }
                     }
-                    if calc.count == 1 {        // If the final calc is of length one, then it's "valid"
-                        if calc[0].error != Constants.NO_ERROR {
-                            results[l] = getErrorMessage(calc[0].error)
-                        } else if calc[0].isComplex {
-                            results[l] = calc[0].complex.toString
-                        } else if calc[0].hasValue {
-                            results[l] = calc[0].toSystem
-                            if calc[0].hasUnit {
-                                results[l] += " "
-                                for (i, u) in calc[0].unit.enumerated() {
-                                    if u.factor != 0 {
-                                        results[l] += u.prefix.symbol+u.unit.symbol
-                                        if u.factor != 1 {
-                                            let factor_string = String(format: "%g", u.factor)
-                                            factors_range[l].append(NSMakeRange(results[l].count, factor_string.count))
-                                            results[l] += factor_string
-                                        }
-                                        if i < calc[0].unit.count-1 {
-                                            results[l] += "."
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            results[l] = calc[0].string
-                        }
-                    } else if calc.count > 0 && calc[0].hasValue {
-                        results[l] = calc[0].toSystem
-                        if calc[0].hasUnit {
-                            results[l] += " "
-                            for (i, u) in calc[0].unit.enumerated() {
-                                if u.factor != 0 {
-                                    results[l] += u.prefix.symbol+u.unit.symbol
-                                    if u.factor != 1 {
-                                        let factor_string = String(format: "%g", u.factor)
-                                        factors_range[l].append(NSMakeRange(results[l].count, factor_string.count))
-                                        results[l] += factor_string
-                                    }
-                                    if i < calc[0].unit.count-1 {
-                                        results[l] += "."
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        results[l] = ""
+                    results[l] = getResult(calc: &calc, line: l)
+                    if calc[0].error != Constants.NO_ERROR {
+                        results[l] = getErrorMessage(calc[0].error)
                     }
                 } else {
                     results[l] = ""
@@ -399,6 +358,11 @@ class ViewController: NSViewController, NSTextViewDelegate {
         self.viewDidLayout()
     }
     
+    
+    /// Color the input line (function, units, ...) by filling an array of ranges and colors we will later apply to the TextArea
+    /// - Parameters:
+    ///   - calc: calc array
+    ///   - line: current line
     func colorInput(calc: inout [CalcElement], line: Int) {
         for (i, e) in calc.enumerated() {
             var calc2 = calc
@@ -437,6 +401,73 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
+    
+    /// Generates the result string or the error after all the operations have been tried
+    /// - Parameters:
+    ///   - calc: calc array
+    ///   - line: current line
+    /// - Returns: result string
+    func getResult(calc: inout [CalcElement], line:  Int) -> String {
+        var final = ""
+        if calc.count == 1 {
+            let e = calc[0]
+            if e.isInteger {
+                if e.representation == Constants.DEC {
+                    final = String(e.integer) // TODO: better
+                } else {
+                    let p2n = Int(pow(2.0, Double(AppVariables.bits)))   // 2**(MAX_BITS)
+                    if(!AppVariables.signed && (e.integer < 0 || e.integer >= p2n)) || (AppVariables.signed && (e.integer < -p2n/2 || e.integer >= p2n/2)) {
+                        setError(calc: &calc, error: Constants.OUT_BOUNDS_ERROR)
+                        return "";
+                    }
+                    if(AppVariables.signed && e.integer < 0) {
+                        if e.representation == Constants.BIN {
+                            final = "0b"+String(p2n + e.integer, radix: 2)
+                        } else if e.representation == Constants.HEX {
+                            final = "0x"+String(p2n + e.integer, radix: 16)
+                        }
+                    } else {
+                        if e.representation == Constants.BIN {
+                            final = "0b"+String(e.integer, radix: 2)
+                        } else if e.representation == Constants.HEX {
+                            final = "0x"+String(e.integer, radix: 16)
+                        }
+                    }
+                }
+            } else if e.isReal {
+                if e.representation == Constants.DEC {
+                    final = e.real.scientificFormatted
+                } else {
+                    setError(calc: &calc, error: Constants.REPRESENTATION_ERROR)
+                    return ""
+                }
+            } else if e.isComplex {
+               final = e.complex.toString
+            }
+            
+            if e.hasUnit {
+                final += " "
+                for (i, u) in e.unit.enumerated() {
+                    if u.factor != 0 {
+                        final += u.prefix.symbol+u.unit.symbol
+                        if u.factor != 1 {
+                            let factor_string = String(format: "%g", u.factor)
+                            factors_range[line].append(NSMakeRange(final.count, factor_string.count))
+                            final += factor_string
+                        }
+                        if i < calc[0].unit.count-1 {
+                            final += "."
+                        }
+                    }
+                }
+            }
+            
+        } else {
+            return ""
+        }
+        return final
+    }
+    
     func doComments(calc: inout [CalcElement], line: Int) {
         var i = 0
         while i < calc.count {
@@ -460,6 +491,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
+    
+    /// Let's the user change settings directly from the calculator by writing settings.xxxx=yyyy
+    /// - Parameter calc: calc array
     func doSettings(calc: inout[CalcElement]) {
         var i = 4
         while i<calc.count {
@@ -481,6 +515,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
+    // FIXME: why do this exist ?
     func doDotSeparation(calc: inout [CalcElement]) {
         var i = 0
         while i<calc.count {
@@ -494,6 +529,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
+    // FIXME: what's that ?
     func doDoubleOperator(calc: inout [CalcElement]) {
         var i = 0
         while i<calc.count {
@@ -606,6 +642,41 @@ class ViewController: NSViewController, NSTextViewDelegate {
         return false
     }
     
+    func doFunctionsReplacement(calc: inout[CalcElement], line: Int) {
+        var i = 0
+        while i < calc.count-1 {
+            for f in funcs {
+                if calc[i].string == f.name && calc[i+1].string.isNumber {
+                    if (i < calc.count-2 && calc[i+2].string != "=") || i >= calc.count-2 {
+                        contains_func_var[line] = true
+                        var c = f.calc
+                        for (j, c_i) in c.enumerated() {
+                            if c_i.string == f.variable {
+                                c[j] = calc[i+1]
+                            }
+                        }
+                        if(!isComplex(calc: &c)) {
+                            doConstants(calc: &c)
+                            doParenthesis(calc: &c, 0)
+                            doMath(calc: &c)
+                        } else {
+                            doConstants(calc: &c)
+                            doParenthesis(calc: &c, 0)
+                            doComplex(calc: &c)
+                        }
+                        if c.count == 1 {
+                            calc[i] = c[0]
+                            calc.remove(at: i+1)
+                        }
+                    }
+                }
+            }
+            i+=1
+        }
+    }
+    
+    // FIXME: I really should have commented when I made these horrors
+    // note to self: damn, I was young and ambitious
     func removeUseless(calc: inout [CalcElement]) {
         var lastOpen = -2
         var firstOpen = -2
@@ -656,39 +727,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
-    func doFunctionsReplacement(calc: inout[CalcElement], line: Int) {
-        var i = 0
-        while i < calc.count-1 {
-            for f in funcs {
-                if calc[i].string == f.name && calc[i+1].string.isNumber {
-                    if (i < calc.count-2 && calc[i+2].string != "=") || i >= calc.count-2 {
-                        contains_func_var[line] = true
-                        var c = f.calc
-                        for (j, c_i) in c.enumerated() {
-                            if c_i.string == f.variable {
-                                c[j] = calc[i+1]
-                            }
-                        }
-                        if(!isComplex(calc: &c)) {
-                            doConstants(calc: &c)
-                            doParenthesis(calc: &c, 0)
-                            doMath(calc: &c)
-                        } else {
-                            doConstants(calc: &c)
-                            doParenthesis(calc: &c, 0)
-                            doComplex(calc: &c)
-                        }
-                        if c.count == 1 {
-                            calc[i] = c[0]
-                            calc.remove(at: i+1)
-                        }
-                    }
-                }
-            }
-            i+=1
-        }
-    }
-    
     func doConstants(calc: inout [CalcElement]) {
         var i = 0
         while i < calc.count {
@@ -730,6 +768,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
+    // TODO: redo, we hate APIs also add support for €$£...
     func doCurrencyConversions(calc: inout [CalcElement]) {
         var i = 2
         while i < calc.count {
@@ -815,6 +854,8 @@ func getErrorMessage(_ error: Int) -> String {
             return "Number too big!"
         case Constants.UNIT_ERROR:
             return "The units do not match!"
+        case Constants.OUT_BOUNDS_ERROR:
+            return "Logic number out of bounds!"
         default:
             return "Error!"
     }

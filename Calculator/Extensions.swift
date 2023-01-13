@@ -111,45 +111,6 @@ extension URLSession {
     }
 }
 
-// TODO: errors on a single element... probably needs to be a function not an extension
-extension CalcElement {
-    var toSystem: String {
-        var final = ""
-        if self.isInteger {
-            if self.representation == Constants.DEC {
-                final = String(self.integer) // TODO: better
-            } else {
-                let p2n = Int(pow(2.0, Double(AppVariables.bits)))   // 2**(MAX_BITS)
-                if(!AppVariables.signed && (self.integer < 0 || self.integer >= p2n)) || (AppVariables.signed && (self.integer < -p2n/2 || self.integer >= p2n/2)) {
-                    return "";
-                }
-                if(AppVariables.signed && self.integer < 0) {
-                    if self.representation == Constants.BIN {
-                        final = "0b"+String(p2n + self.integer, radix: 2)
-                    } else if self.representation == Constants.HEX {
-                        final = "0x"+String(p2n + self.integer, radix: 16)
-                    }
-                } else {
-                    if self.representation == Constants.BIN {
-                        final = "0b"+String(self.integer, radix: 2)
-                    } else if self.representation == Constants.HEX {
-                        final = "0x"+String(self.integer, radix: 16)
-                    }
-                }
-            }
-        } else if self.isReal {
-            if self.representation == Constants.DEC {
-                final = self.real.scientificFormatted
-            } else {
-                return "";
-            }
-        } else if self.isComplex {
-            return ""
-        }
-        return final
-    }
-}
-
 extension Complex where RealType == Double {
     var toString: String {
         var str = ""
@@ -231,6 +192,14 @@ extension CalcElement {
 
 extension [CalcElement] {
     var isInteger: Bool { return self.filter { $0.hasValue }.count == self.filter { $0.isInteger }.count }
+    mutating func toComplex() {
+        for i in 0...self.count-1 {
+            if self[i].hasValue {
+                self[i].isReal = false
+                self[i].isInteger = false
+            } 
+        }
+    }
 }
 
 extension NSColor {
