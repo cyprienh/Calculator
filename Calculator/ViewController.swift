@@ -8,7 +8,6 @@
 // TODO: cos/sin/tan with pi to be exact -> catch pi before translation and check coefficient
 // TODO: a=10a shouldnt be possible lmao
 // TODO: parenthesis in units :(
-// TODO: what the heck is mm/cm or mm*m ???????? should we error it ? V/V are a thing so idk
 
 import Cocoa
 import Numerics
@@ -326,6 +325,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                             doGreekLetters(calc: &calc)
                             doParenthesis(calc: &calc, 0)
                             doMath(calc: &calc)
+                            doLogic(calc: &calc)
                             doConversions(calc: &calc)
                             doCurrencyConversions(calc: &calc)
                             doVariablesDefinition(calc: &calc, line: l)
@@ -675,8 +675,8 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
-    // FIXME: I really should have commented when I made these horrors
-    // note to self: damn, I was young and ambitious
+    /// Removes all useless parenthesis between an exp and a ln to be able to cancel them out later on
+    /// - Parameter calc: calc array
     func removeUseless(calc: inout [CalcElement]) {
         var lastOpen = -2
         var firstOpen = -2

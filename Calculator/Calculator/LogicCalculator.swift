@@ -8,6 +8,15 @@
 import Foundation
 import Cocoa
 
+func doLogic(calc: inout [CalcElement]) {
+    doBitShifts(calc: &calc)
+    doNOT(calc: &calc)
+    doAND(calc: &calc)
+    doOR(calc: &calc)
+    doXOR(calc: &calc)
+    doDivisionRest(calc: &calc)
+}
+
 func doBitShifts(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count-1 {

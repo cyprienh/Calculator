@@ -407,8 +407,6 @@ func getAdditionUnit(_ x: [Unit], _ y: [Unit]) -> (Bool, Double) {
     return (factor_x > factor_y, abs(factor_x - factor_y))
 }
 
-
-// COLORIAGE CHELOU
 func doUnits(calc: inout [CalcElement]) {
     var i = 1
     while i < calc.count {
@@ -519,10 +517,11 @@ func arrangeUnits(_ x: inout CalcElement) {
                     let factor1 = f1*Double(p1.factor)
                     let factor2 = f2*Double(p2.factor)
                     
-                    var value = Double(x.string.toNumber) * pow(10, factor1+factor2)
+                    x.toDouble()
+                    var value = Double(x.getDouble) * pow(10, factor1+factor2)
                     
                     x.unit[i].factor = x.unit[i].factor+x.unit[j].factor
-                    x.string = String(value)
+                    x.real = value
                     x.unit[i].prefix = Prefixes.first(where: {$0.factor == 0})!
                     
                     if x.unit[i].factor != 0 {
@@ -534,7 +533,7 @@ func arrangeUnits(_ x: inout CalcElement) {
                             value = value * pow(10, Double(3*k)*(f1+f2))
                             if let index = Prefixes.firstIndex(where: {$0.factor == -3*k}) {
                                 let np = Prefixes[index]
-                                x.string = String(value)
+                                x.real = value
                                 x.unit[i].prefix = np
                             }
                         } else if value > pow(10, Double(3*(f1+f2))) {
@@ -545,7 +544,7 @@ func arrangeUnits(_ x: inout CalcElement) {
                             value = value * pow(10, Double(Double(-3*k)*(f1+f2)))
                             if let index = Prefixes.firstIndex(where: {$0.factor == 3*k}) {
                                 let np = Prefixes[index]
-                                x.string = String(value)
+                                x.real = value
                                 x.unit[i].prefix = np
                             }
                         }

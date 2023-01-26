@@ -25,7 +25,6 @@ func isComplex(calc: inout [CalcElement]) -> Bool {
 
 func doComplex(calc: inout [CalcElement]) {
     toComplex(calc: &calc)
-    calcPrint(calc)
     doParenthesis(calc: &calc, 0)
     doComplexMath(calc: &calc)
 }

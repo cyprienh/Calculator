@@ -17,14 +17,6 @@ func doMath(calc: inout [CalcElement]) {
     doPower(calc: &calc, 0)
     doMultDiv(calc: &calc)
     doPlusMinus(calc: &calc)
-    
-    // Logic calculator TODO: separate file ?
-    doBitShifts(calc: &calc)
-    doNOT(calc: &calc)
-    doAND(calc: &calc)
-    doOR(calc: &calc)
-    doXOR(calc: &calc)
-    doDivisionRest(calc: &calc)
 }
 
 func doPower(calc: inout [CalcElement], _ start: Int) {
