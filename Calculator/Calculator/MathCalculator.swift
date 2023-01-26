@@ -345,10 +345,10 @@ func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF TH
                 calc[i] = CalcElement(string: "", isReal: true, real: atanh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "sin" {
-                calc[i] = CalcElement(string: "", isReal: true, real: sin(doDegRad(calc[i+1])), range: calc[i].range)
+                calc[i] = CalcElement(string: "", isReal: true, real: smartRounding(sin(doDegRad(calc[i+1]))), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "cos" {
-                calc[i] = CalcElement(string: "", isReal: true, real: cos(doDegRad(calc[i+1])), range: calc[i].range)
+                calc[i] = CalcElement(string: "", isReal: true, real: smartRounding(cos(doDegRad(calc[i+1]))), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "tan" {
                 calc[i] = CalcElement(string: "", isReal: true, real: tan(doDegRad(calc[i+1])), range: calc[i].range)
@@ -461,7 +461,7 @@ func doParenthesis(calc: inout [CalcElement], _ pos: Int) {
 /// - Parameter value: value to round
 /// - Returns: rounded value
 func smartRounding(_ value: Double) -> Double {
-    let power = NSDecimalNumber(decimal: pow(10, AppVariables.digits)).doubleValue
+    let power = pow(10, Double(AppVariables.digits))
     let rounded = round(power * value) / power
     return rounded
 }

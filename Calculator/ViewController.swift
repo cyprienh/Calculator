@@ -5,8 +5,6 @@
 //  Created by Cyprien Heusse on 09/09/2021.
 //
 
-// TODO: cos/sin/tan with pi to be exact -> catch pi before translation and check coefficient
-// TODO: a=10a shouldnt be possible lmao
 // TODO: parenthesis in units :(
 
 import Cocoa
@@ -62,6 +60,7 @@ struct Constants {
     static let UNIT_ERROR = 9
     static let TOO_BIG_ERROR = 10
     static let OUT_BOUNDS_ERROR = 11
+    static let DEFINITION_ERROR = 12
 }
 
 struct CalcElement {
@@ -562,27 +561,34 @@ class ViewController: NSViewController, NSTextViewDelegate {
     }
     
     func doVariablesDefinition(calc: inout [CalcElement], line: Int) {
-        if calc.count >= 3 {
-            if calc[1].string == "=" && calc[0].string.isText && calc[2].string.isNumber {
-                var first = [calc[0]]
-                let ucalc = findUnit(calc: &first, start: 0)
-                if Units.contains(where: { $0.symbol == calc[0].string}) || constants_list.contains(calc[0].string) || funcs.contains(where: { $0.name == calc[0].string}) || (variables.contains(where: { $0.name == calc[0].string}) && variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line != line) || ucalc.hasUnit {
-                    setError(calc: &calc, error: Constants.NAME_ERROR)
-                    return
-                } else {
-                    if variables.filter({$0.name == calc[0].string}).count == 0 {
-                        variables.append(CalcVariable(name: calc[0].string, value: calc[2], line: line))
-                        lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0x00FDF1, alpha: 1.0), range: calc[0].range))
+        calcPrint(calc)
+        if calc.count >= 2 {
+            if calc[1].string == "=" && calc[0].string.isText {
+                calcPrint(calc)
+                if calc.count == 3 && calc[2].hasValue {
+                    var first = [calc[0]]
+                    let ucalc = findUnit(calc: &first, start: 0)
+                    if Units.contains(where: { $0.symbol == calc[0].string}) || constants_list.contains(calc[0].string) || funcs.contains(where: { $0.name == calc[0].string}) || (variables.contains(where: { $0.name == calc[0].string}) && variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line != line) || ucalc.hasUnit {
+                        setError(calc: &calc, error: Constants.NAME_ERROR)
+                        return
                     } else {
-                        if variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line == line {
-                            variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].value = calc[2]
+                        if variables.filter({$0.name == calc[0].string}).count == 0 {
+                            variables.append(CalcVariable(name: calc[0].string, value: calc[2], line: line))
                             lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0x00FDF1, alpha: 1.0), range: calc[0].range))
+                        } else {
+                            if variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].line == line {
+                                variables[variables.firstIndex(where: {$0.name == calc[0].string}) ?? 0].value = calc[2]
+                                lines_color[line].append(ColorElement(color: NSColor.fromHex(hex: 0x00FDF1, alpha: 1.0), range: calc[0].range))
+                            }
                         }
+                        func_var_defs.append(CalcFunctionsDef(name: calc[0].string, line: line))
+                        calc[0] = calc[2]
+                        calc.remove(at: 2)
+                        calc.remove(at: 1)
                     }
-                    func_var_defs.append(CalcFunctionsDef(name: calc[0].string, line: line))
-                    calc[0] = calc[2]
-                    calc.remove(at: 2)
-                    calc.remove(at: 1)
+                } else {
+                    setError(calc: &calc, error: Constants.DEFINITION_ERROR)
+                    return
                 }
             }
         }
@@ -593,9 +599,14 @@ class ViewController: NSViewController, NSTextViewDelegate {
         while i < calc.count {
             for v in variables {
                 if calc[i].string == v.name {
-                    if !(i < calc.count-1 && calc[i+1].string == "=") {
+                    if calc.count >= 2 && calc[0].string == v.name && calc[1].string == "=" && i != 0 {
+                        setError(calc: &calc, error: Constants.DEFINITION_ERROR)
+                        print("error")
+                        return
+                    } else if !(i < calc.count-1 && calc[i+1].string == "=") {
                         contains_func_var[line] = true
                         calc[i] =  v.value
+                        calc[i].string = ""
                     }
                 }
             }
@@ -856,6 +867,8 @@ func getErrorMessage(_ error: Int) -> String {
             return "The units do not match!"
         case Constants.OUT_BOUNDS_ERROR:
             return "Logic number out of bounds!"
+        case Constants.DEFINITION_ERROR:
+            return "Definition error!"
         default:
             return "Error!"
     }

@@ -173,7 +173,7 @@ extension Double {
 
 extension CalcElement {
     var hasUnit: Bool { return self.unit.count > 0 }
-    var hasValue: Bool { return self.isInteger || self.isReal }
+    var hasValue: Bool { return self.isInteger || self.isReal || self.isComplex }
     var getDouble: Double {
         if self.isInteger {
             return Double(self.integer)

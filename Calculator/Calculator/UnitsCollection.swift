@@ -84,6 +84,7 @@ let Units: [UnitName] = [
     UnitName(name: "foot", symbol: "'", hasPrefix: false, canFactor: true),
     UnitName(name: "inch", symbol: "\"", hasPrefix: false, canFactor: true),
     UnitName(name: "degree", symbol: "°", hasPrefix: false, canFactor: true),
+    UnitName(name: "degree", symbol: "deg", hasPrefix: false, canFactor: true),     // FIXME: doesn't work ???
     UnitName(name: "radian", symbol: "rad", hasPrefix: false, canFactor: true)
 ]
 
