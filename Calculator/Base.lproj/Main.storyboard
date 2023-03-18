@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21225" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21225"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -571,7 +571,9 @@
                             <constraint firstItem="1PS-Z7-m7X" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="Ltl-EX-ejy"/>
                             <constraint firstItem="1PS-Z7-m7X" firstAttribute="top" secondItem="DaJ-nu-8d3" secondAttribute="bottom" constant="15" id="Og5-Pq-hkB"/>
                             <constraint firstAttribute="trailing" secondItem="W8g-tW-aGb" secondAttribute="trailing" constant="20" id="P0H-pj-Xbv"/>
+                            <constraint firstItem="lB6-qa-hAg" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" symbolic="YES" id="SvA-aP-gq2"/>
                             <constraint firstItem="08v-I6-FqV" firstAttribute="top" secondItem="KzO-h9-6DV" secondAttribute="bottom" constant="30" id="ToT-VN-wsE"/>
+                            <constraint firstItem="KzO-h9-6DV" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" symbolic="YES" id="U65-Ok-CwP"/>
                             <constraint firstAttribute="trailing" secondItem="U3C-cl-0et" secondAttribute="trailing" constant="20" id="UTM-ed-jzX"/>
                             <constraint firstItem="08v-I6-FqV" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="hcS-bk-tep"/>
                             <constraint firstItem="1PS-Z7-m7X" firstAttribute="leading" secondItem="KzO-h9-6DV" secondAttribute="leading" id="hqR-Sr-m9q"/>

@@ -61,6 +61,20 @@ struct Constants {
     static let TOO_BIG_ERROR = 10
     static let OUT_BOUNDS_ERROR = 11
     static let DEFINITION_ERROR = 12
+    static let API_ERROR = 13
+}
+
+struct ExchangeRates {
+    static var rates: [ExchangeRate] = []
+    static var date: Date = Date.distantPast
+    static var error: Int = 0
+}
+
+struct ExchangeRate {
+    var fullName: String = ""
+    var iso: String = ""
+    var symbol: String = ""
+    var value: Double  = 0
 }
 
 struct CalcElement {
@@ -75,6 +89,7 @@ struct CalcElement {
     var representation: Int = 1
     var range: NSRange
     var error: Int = 0  // No error by default
+    var printString: Bool = false
 }
 
 struct ColorElement {
@@ -127,6 +142,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
         let defaults = UserDefaults.standard
         AppVariables.separator = defaults.integer(forKey: "Separator")
         AppVariables.signed = defaults.bool(forKey: "Signed")
+        ExchangeRates.rates = defaults.object(forKey: "Rates") as? [ExchangeRate] ?? []
+        ExchangeRates.date = defaults.object(forKey: "RatesDate") as? Date ?? Date.distantPast
+        ExchangeRates.error = defaults.integer(forKey: "RatesError")
         if isKeyPresentInUserDefaults(key: "Digits") {
             AppVariables.digits = defaults.integer(forKey: "Digits")
         }
@@ -314,15 +332,13 @@ class ViewController: NSViewController, NSTextViewDelegate {
                     if !isComplex(calc: &calc) {            // Do the actual math
                         doUnits(calc: &calc)
                         if !doFunctionsDeclaration(calc: &calc, line: l) {
-                            doParenthesis(calc: &calc, 0)
+                            doParenthesis(calc: &calc)
                             doVariablesReplacement(calc: &calc, line: l)
                             doFunctionsReplacement(calc: &calc, line: l)
                             doConstants(calc: &calc)
                             doUnits(calc: &calc)
                             doUnitsConversions(calc: &calc)
-                            doParenthesis(calc: &calc, 0)
-                            doGreekLetters(calc: &calc)
-                            doParenthesis(calc: &calc, 0)
+                            doParenthesis(calc: &calc)
                             doMath(calc: &calc)
                             doLogic(calc: &calc)
                             doConversions(calc: &calc)
@@ -436,6 +452,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
             } else if e.isReal {
                 if e.representation == Constants.DEC {
                     final = e.real.scientificFormatted
+                    if e.printString {
+                        final += " " + e.string
+                    }
                 } else {
                     setError(calc: &calc, error: Constants.REPRESENTATION_ERROR)
                     return ""
@@ -561,10 +580,8 @@ class ViewController: NSViewController, NSTextViewDelegate {
     }
     
     func doVariablesDefinition(calc: inout [CalcElement], line: Int) {
-        calcPrint(calc)
         if calc.count >= 2 {
             if calc[1].string == "=" && calc[0].string.isText {
-                calcPrint(calc)
                 if calc.count == 3 && calc[2].hasValue {
                     var first = [calc[0]]
                     let ucalc = findUnit(calc: &first, start: 0)
@@ -601,7 +618,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 if calc[i].string == v.name {
                     if calc.count >= 2 && calc[0].string == v.name && calc[1].string == "=" && i != 0 {
                         setError(calc: &calc, error: Constants.DEFINITION_ERROR)
-                        print("error")
                         return
                     } else if !(i < calc.count-1 && calc[i+1].string == "=") {
                         contains_func_var[line] = true
@@ -668,11 +684,11 @@ class ViewController: NSViewController, NSTextViewDelegate {
                         }
                         if(!isComplex(calc: &c)) {
                             doConstants(calc: &c)
-                            doParenthesis(calc: &c, 0)
+                            doParenthesis(calc: &c)
                             doMath(calc: &c)
                         } else {
                             doConstants(calc: &c)
-                            doParenthesis(calc: &c, 0)
+                            doParenthesis(calc: &c)
                             doComplex(calc: &c)
                         }
                         if c.count == 1 {
@@ -761,69 +777,32 @@ class ViewController: NSViewController, NSTextViewDelegate {
         }
     }
     
-    func doGreekLetters(calc: inout [CalcElement]) {
-        var i = 0
-        while i < calc.count {
-            if calc[i].string == "\\alpha" {
-                calc[i].string = "α"
-            } else if calc[i].string == "\\beta" {
-                calc[i].string = "β"
-            } else if calc[i].string == "\\gamma" {
-                calc[i].string = "γ"
-            } else if calc[i].string == "\\delta" {
-                calc[i].string = "δ"
-            } else if calc[i].string == "\\epsilon" {
-                calc[i].string = "ε"
-            }
-            i+=1
-        }
-    }
-    
-    // TODO: redo, we hate APIs also add support for €$£...
+    /// Based on the IMF's daily exchange rates, might be last day's data depending on the time
+    /// - Parameter calc: as always
     func doCurrencyConversions(calc: inout [CalcElement]) {
         var i = 2
-        while i < calc.count {
-            if i < calc.count-1 && (calc[i].string == "in" || calc[i].string == "to") && calc[i-2].string.isNumber {
-                let value = calc[i-2].string
-                let valuedouble = Double(value.toNumber)
-                var result = ""
+        while i < calc.count-1 {
+            if (calc[i].string == "in" || calc[i].string == "to") && calc[i-2].hasValue && calc[i-1].string != "" && calc[i+1].string != "" {
                 let currencies = getCSVData("currencies.csv")
-                if currencies.contains(String.SubSequence(calc[i-1].string)) && currencies.contains(String.SubSequence(calc[i+1].string)) {
-                    let urlSession = URLSession(configuration: .ephemeral)
-                    let url = URL(string: "https://api.frankfurter.app/latest?from="+calc[i-1].string+"&to="+calc[i+1].string)!
-                    let task = urlSession.synchronousDataTask(with: url)
-                    do {
-                        if let json = try JSONSerialization.jsonObject(with: task.0!, options: []) as? [String: Any] {
-                            let rates = json["rates"] as! Dictionary<String, Double>
-                            let rate = rates[calc[i+1].string]!
-                            result = String(valuedouble*rate)+" "+calc[i+1].string
-                        }
-                    } catch let error as NSError {
-                        print("Failed to load: \(error.localizedDescription)")
-                    }
+                if let from = ExchangeRates.rates.first(where: { $0.iso == calc[i-1].string || $0.symbol == calc[i-1].string }), let to = ExchangeRates.rates.first(where: { $0.iso == calc[i+1].string || $0.symbol == calc[i+1].string }) {
+                    
+                    calc[i-2].toDouble()
+                    calc[i-2].real *= to.value/from.value
+                    
+                    calc.remove(at: i+1)
+                    calc.remove(at: i)
+                    calc.remove(at: i-1)
+                    i-=1
+                } else if currencies.contains(where: { $0[1] == calc[i-1].string || $0[2] == calc[i-1].string }) {
+                    setError(calc: &calc, error: Constants.API_ERROR)
+                    break
                 }
-                calc[i].string = result
-                calc.remove(at: i+1)
-                calc.remove(at: i-2)
-                calc.remove(at: i-2)
-                i-=2
             }
             i+=1
         }
+        
     }
-    
-    func getCSVData(_ filename: String) -> [String.SubSequence] {
-        let lines: [String.SubSequence]
-        let path = Bundle.main.path(forResource: "currencies", ofType: "csv")!
-        do {
-            let contents = try String(contentsOfFile: path)
-            lines = contents.split(separator:"\r\n")
-        } catch {
-            return []
-        }
-        return lines
-    }
-    
+
     func textDidBeginEditing(_ notification: Notification) {
         document?.objectDidBeginEditing(self)
     }
@@ -869,6 +848,8 @@ func getErrorMessage(_ error: Int) -> String {
             return "Logic number out of bounds!"
         case Constants.DEFINITION_ERROR:
             return "Definition error!"
+        case Constants.API_ERROR:
+            return "API error!"
         default:
             return "Error!"
     }

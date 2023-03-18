@@ -404,58 +404,51 @@ func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF TH
         i+=1
     }
 }
- 
 
-/// Reccurently calculate what's inside the parenthesis
-/// - Parameters:
-///   - calc: calc array
-///   - pos: for recurrence
-func doParenthesis(calc: inout [CalcElement], _ pos: Int) {
-    var i = pos
-    var start = 0
-    var stop = 0
+func doParenthesis(calc: inout [CalcElement]) {
+    var i = 0
     while i < calc.count {
         if calc[i].string == "(" {
-            start = i+1
-            break
-        }
-        i+=1
-    }
-    i = start
-    while i < calc.count {
-        if calc[i].string == ")" {
-            stop = i-1
-            if stop >= start && start != 0 && stop != 0 {
-                var subcalc = Array<CalcElement>(calc[start...stop])
-                let len = subcalc.count
-                if isComplex(calc: &calc) {
-                    doComplexMath(calc: &subcalc)
-                } else {
-                    doMath(calc: &subcalc)
-                }
-                if subcalc.count < len {
-                    for k in start...stop {
-                        if k-start >= subcalc.count {
-                            calc.remove(at: stop)
-                            stop -= 1
-                        } else {
-                            calc[k] = subcalc[k-start]
-                        }
-                    }
-                }
-                if subcalc.count == 1 {
-                    calc.remove(at: stop+1)
-                    calc.remove(at: start-1)
-                }
+            i = doParenthesisRecursive(calc: &calc, i)
+            if i == 0 {
+                break
             }
-            break
-        } else if calc[i].string == "(" {
-            doParenthesis(calc: &calc, start)
         }
         i+=1
     }
- }
+}
 
+// TODO: error
+func doParenthesisRecursive(calc: inout [CalcElement], _ pos: Int) -> Int {
+    var i = pos+1
+    while i < calc.count && calc[i].string != ")" {
+        if calc[i].string == "(" {
+            i = doParenthesisRecursive(calc: &calc, i)
+        }
+        i+=1
+    }
+    if i < calc.count && calc[i].string == ")" {
+        var subcalc = Array<CalcElement>(calc[pos+1...i-1])
+        let length = subcalc.count
+        if isComplex(calc: &calc) {
+            doComplexMath(calc: &subcalc)
+        } else {
+            doMath(calc: &subcalc)
+            doLogic(calc: &subcalc)
+        }
+        if subcalc.count == 1 {
+            for j in (pos...i).reversed() {
+                calc.remove(at: j)
+            }
+            calc.insert(contentsOf: subcalc, at: pos)
+            i -= (length+1)
+        } else {
+            setError(calc: &calc, error: Constants.MATH_ERROR)
+            return 0
+        }
+    }
+    return i
+}
 
 /// Round result properly depending on settings
 /// - Parameter value: value to round

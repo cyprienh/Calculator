@@ -25,7 +25,7 @@ func isComplex(calc: inout [CalcElement]) -> Bool {
 
 func doComplex(calc: inout [CalcElement]) {
     toComplex(calc: &calc)
-    doParenthesis(calc: &calc, 0)
+    doParenthesis(calc: &calc)
     doComplexMath(calc: &calc)
 }
 
@@ -229,20 +229,15 @@ func toComplex(calc: inout [CalcElement]) {
     var i = 0
     while i < calc.count {
         if calc[i].hasValue {
-            if calc[i].isInteger {
-                calc[i].complex = Complex(calc[i].integer)
-            } else if calc[i].isReal {
-                calc[i].complex = Complex(calc[i].real)
-            }
+            calc[i].complex = Complex(calc[i].getDouble)
             calc[i].isComplex = true
-            calc.toComplex()
         } else if calc[i].string == "i" {
             calc[i].complex = .i
             calc[i].isComplex = true
-            calc.toComplex()
         }
         i+=1
     }
+    calc.toComplex()
 }
 
 func c_exp(_ x: Complex<Double>) -> Complex<Double> {

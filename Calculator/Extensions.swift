@@ -197,6 +197,7 @@ extension [CalcElement] {
             if self[i].hasValue {
                 self[i].isReal = false
                 self[i].isInteger = false
+                self[i].isComplex = true
             } 
         }
     }

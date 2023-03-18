@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4614E47F270F50DE009B6F0F /* UnitsCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4614E47E270F50DE009B6F0F /* UnitsCollection.swift */; };
-		4615EE2226FBD7630074BB56 /* currencies.csv in Resources */ = {isa = PBXBuildFile; fileRef = 4615EE2126FBD7630074BB56 /* currencies.csv */; };
 		461DF0C62860867900860CAD /* Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = 461DF0C52860867900860CAD /* Content.swift */; };
+		462722A429C4ADE20091188B /* currencies.csv in Resources */ = {isa = PBXBuildFile; fileRef = 462722A329C4ADE20091188B /* currencies.csv */; };
 		462CC2C92860A23800AC66F4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462CC2C82860A23800AC66F4 /* Document.swift */; };
 		462CC2CB2860AA5600AC66F4 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462CC2CA2860AA5600AC66F4 /* WindowController.swift */; };
 		462D525C26EAD20A00937620 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462D525B26EAD20A00937620 /* AppDelegate.swift */; };
@@ -50,8 +50,8 @@
 
 /* Begin PBXFileReference section */
 		4614E47E270F50DE009B6F0F /* UnitsCollection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnitsCollection.swift; sourceTree = "<group>"; };
-		4615EE2126FBD7630074BB56 /* currencies.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = currencies.csv; sourceTree = "<group>"; };
 		461DF0C52860867900860CAD /* Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Content.swift; sourceTree = "<group>"; };
+		462722A329C4ADE20091188B /* currencies.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = currencies.csv; sourceTree = "<group>"; };
 		462CC2C82860A23800AC66F4 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		462CC2CA2860AA5600AC66F4 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 		462D525826EAD20A00937620 /* Calculator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Calculator.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -138,7 +138,7 @@
 				462D526126EAD20B00937620 /* Main.storyboard */,
 				462D526426EAD20B00937620 /* Info.plist */,
 				462D526526EAD20B00937620 /* Calculator.entitlements */,
-				4615EE2126FBD7630074BB56 /* currencies.csv */,
+				462722A329C4ADE20091188B /* currencies.csv */,
 			);
 			path = Calculator;
 			sourceTree = "<group>";
@@ -305,7 +305,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				462D526026EAD20B00937620 /* Assets.xcassets in Resources */,
-				4615EE2226FBD7630074BB56 /* currencies.csv in Resources */,
+				462722A429C4ADE20091188B /* currencies.csv in Resources */,
 				462D526326EAD20B00937620 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
