@@ -315,7 +315,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
             if lines[l].count > 0 {                 // If line isn't empty
                 calc = parseLine(lines[l], line_index)
             }
-                        
+            
             if calc.count > 0 {                     // Coloring needs to be done every time (maybe the others don't tho?)
                 lines_color.append([])
                 doNumber(calc: &calc)
@@ -797,7 +797,6 @@ class ViewController: NSViewController, NSTextViewDelegate {
                     i-=1
                 } else if currencies.contains(where: { $0[1] == calc[i-1].string || $0[2] == calc[i-1].string })
                           && currencies.contains(where: { $0[1] == calc[i+1].string || $0[2] == calc[i+1].string }){
-                    print("ghe")
                     setError(calc: &calc, error: Constants.API_ERROR)
                     break
                 }

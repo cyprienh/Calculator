@@ -58,7 +58,10 @@ class PreferencesController: NSViewController, NSTextFieldDelegate, NSWindowDele
     }
     
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        if (commandSelector == #selector(NSResponder.insertNewline(_:))) {
+        if(commandSelector == #selector(NSResponder.insertNewline(_:))) {
+            updateSettings()
+            return true
+        } else if(commandSelector == #selector(NSResponder.cancelOperation(_:))) {
             updateSettings()
             return true
         }
