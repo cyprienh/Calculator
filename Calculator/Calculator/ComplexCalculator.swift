@@ -8,8 +8,6 @@
 import Foundation
 import Numerics
 
-// TODO: show some love to complex operations
-
 func isComplex(calc: inout [CalcElement]) -> Bool {
     if calc.filter({ $0.string == "i"}).count > 0 {
         return true

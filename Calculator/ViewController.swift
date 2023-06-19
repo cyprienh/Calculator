@@ -6,6 +6,8 @@
 //
 
 // TODO: parenthesis in units :(
+// FIXME: negative numbers in signed/unsigned
+// TODO: Gio, Mio, ...
 
 import Cocoa
 import Numerics
@@ -70,7 +72,7 @@ struct ExchangeRates {
     static var error: Int = 0
 }
 
-struct ExchangeRate {
+struct ExchangeRate : Codable {
     var fullName: String = ""
     var iso: String = ""
     var symbol: String = ""
@@ -142,7 +144,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
         let defaults = UserDefaults.standard
         AppVariables.separator = defaults.integer(forKey: "Separator")
         AppVariables.signed = defaults.bool(forKey: "Signed")
-        ExchangeRates.rates = defaults.object(forKey: "Rates") as? [ExchangeRate] ?? []
+        ExchangeRates.rates = loadRates()
         ExchangeRates.date = defaults.object(forKey: "RatesDate") as? Date ?? Date.distantPast
         ExchangeRates.error = defaults.integer(forKey: "RatesError")
         if isKeyPresentInUserDefaults(key: "Digits") {
@@ -793,7 +795,9 @@ class ViewController: NSViewController, NSTextViewDelegate {
                     calc.remove(at: i)
                     calc.remove(at: i-1)
                     i-=1
-                } else if currencies.contains(where: { $0[1] == calc[i-1].string || $0[2] == calc[i-1].string }) {
+                } else if currencies.contains(where: { $0[1] == calc[i-1].string || $0[2] == calc[i-1].string })
+                          && currencies.contains(where: { $0[1] == calc[i+1].string || $0[2] == calc[i+1].string }){
+                    print("ghe")
                     setError(calc: &calc, error: Constants.API_ERROR)
                     break
                 }

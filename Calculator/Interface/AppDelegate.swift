@@ -15,7 +15,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         let today = Date()
-        if Calendar.current.isDate(today, inSameDayAs:ExchangeRates.date) {
+        
+        let defaults = UserDefaults.standard
+        ExchangeRates.rates = loadRates()
+        ExchangeRates.date = defaults.object(forKey: "RatesDate") as? Date ?? Date.distantPast
+        ExchangeRates.error = defaults.integer(forKey: "RatesError")
+        
+        if !Calendar.current.isDate(today, inSameDayAs:ExchangeRates.date) || ExchangeRates.rates.count == 0 {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
             let url = URL(string: "https://www.imf.org/external/np/fin/data/rms_mth.aspx?SelectDate="+formatter.string(from: today)+"&reportType=CVSDR&tsvflag=Y")
@@ -68,8 +74,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     ExchangeRates.error = Constants.API_ERROR
                 }
                 
+                ExchangeRates.date = today
+                
                 let defaults = UserDefaults.standard
-                defaults.set(ExchangeRates.rates, forKey: "Rates")
+                saveRates(ExchangeRates.rates)
                 defaults.set(ExchangeRates.date, forKey: "RatesDate")
                 defaults.set(ExchangeRates.error, forKey: "RatesError")
             }
@@ -101,4 +109,17 @@ func getCSVData(_ filename: String) -> [[String]] {
         return []
     }
     return content
+}
+
+func saveRates(_ rates: [ExchangeRate]) {
+    let data = rates.map { try? JSONEncoder().encode($0) }
+    UserDefaults.standard.set(data, forKey: "Rates")
+}
+
+func loadRates() -> [ExchangeRate] {
+    guard let encodedData = UserDefaults.standard.array(forKey: "Rates") as? [Data] else {
+        return []
+    }
+
+    return encodedData.map { try! JSONDecoder().decode(ExchangeRate.self, from: $0) }
 }

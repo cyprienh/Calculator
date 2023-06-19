@@ -418,7 +418,6 @@ func doParenthesis(calc: inout [CalcElement]) {
     }
 }
 
-// TODO: error
 func doParenthesisRecursive(calc: inout [CalcElement], _ pos: Int) -> Int {
     var i = pos+1
     while i < calc.count && calc[i].string != ")" {
