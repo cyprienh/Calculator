@@ -6,8 +6,8 @@
 //
 
 // TODO: parenthesis in units :(
-// FIXME: negative numbers in signed/unsigned
 // TODO: Gio, Mio, ...
+// TODO: ? functions that can give int as output, give int, not double (abs)
 
 import Cocoa
 import Numerics
@@ -64,6 +64,7 @@ struct Constants {
     static let OUT_BOUNDS_ERROR = 11
     static let DEFINITION_ERROR = 12
     static let API_ERROR = 13
+    static let NO_VALUE_PASSED = 14
 }
 
 struct ExchangeRates {
@@ -853,6 +854,8 @@ func getErrorMessage(_ error: Int) -> String {
             return "Definition error!"
         case Constants.API_ERROR:
             return "API error!"
+        case Constants.NO_VALUE_PASSED:
+            return "No value passed to function!"
         default:
             return "Error!"
     }

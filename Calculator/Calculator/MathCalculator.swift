@@ -326,6 +326,9 @@ func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF TH
             } else if calc[i].string == "ln"  {
                 calc[i] = CalcElement(string: "", isReal: true, real: log(fin), range: calc[i].range)
                 calc.remove(at: i+1)
+            } else if calc[i].string == "abs"  {
+                calc[i] = CalcElement(string: "", isReal: true, real: abs(fin), range: calc[i].range)
+                calc.remove(at: i+1)
             } else if calc[i].string == "sinh" {
                 calc[i] = CalcElement(string: "", isReal: true, real: sinh(fin), range: calc[i].range)
                 calc.remove(at: i+1)
@@ -427,6 +430,10 @@ func doParenthesisRecursive(calc: inout [CalcElement], _ pos: Int) -> Int {
         i+=1
     }
     if i < calc.count && calc[i].string == ")" {
+        if pos+1 > i-1 {
+            setError(calc: &calc, error: Constants.NO_VALUE_PASSED)
+            return 0
+        }
         var subcalc = Array<CalcElement>(calc[pos+1...i-1])
         let length = subcalc.count
         if isComplex(calc: &calc) {
@@ -445,6 +452,7 @@ func doParenthesisRecursive(calc: inout [CalcElement], _ pos: Int) -> Int {
             setError(calc: &calc, error: Constants.MATH_ERROR)
             return 0
         }
+            
     }
     return i
 }

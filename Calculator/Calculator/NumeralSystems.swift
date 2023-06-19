@@ -159,40 +159,40 @@ func hexToBin(_ str: String) -> String {
     var result: String = ""
     for char in str {
         switch char {
-        case "0":
-            result += "0000"
-        case "1":
-            result += "0001"
-        case "2":
-            result += "0010"
-        case "3":
-            result += "0011"
-        case "4":
-            result += "0100"
-        case "5":
-            result += "0101"
-        case "6":
-            result += "0110"
-        case "7":
-            result += "0111"
-        case "8":
-            result += "1000"
-        case "9":
-            result += "1001"
-        case "a":
-            result += "1010"
-        case "b":
-            result += "1011"
-        case "c":
-            result += "1100"
-        case "d":
-            result += "1101"
-        case "e":
-            result += "1110"
-        case "f":
-            result += "1111"
-        default:
-            return ""
+            case "0":
+                result += "0000"
+            case "1":
+                result += "0001"
+            case "2":
+                result += "0010"
+            case "3":
+                result += "0011"
+            case "4":
+                result += "0100"
+            case "5":
+                result += "0101"
+            case "6":
+                result += "0110"
+            case "7":
+                result += "0111"
+            case "8":
+                result += "1000"
+            case "9":
+                result += "1001"
+            case "a":
+                result += "1010"
+            case "b":
+                result += "1011"
+            case "c":
+                result += "1100"
+            case "d":
+                result += "1101"
+            case "e":
+                result += "1110"
+            case "f":
+                result += "1111"
+            default:
+                return ""
         }
     }
     return result
