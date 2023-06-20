@@ -11,6 +11,7 @@ struct UnitPrefix {
     let name: String
     let symbol: String
     let factor: Int
+    let base: Int
 }
 
 struct UnitName {
@@ -27,25 +28,32 @@ struct Unit {
 }
 
 let Prefixes: [UnitPrefix] = [
-    UnitPrefix(name: "yotta", symbol: "Y", factor: 24),
-    UnitPrefix(name: "zetta", symbol: "Z", factor: 21),
-    UnitPrefix(name: "exa", symbol: "E", factor: 18),
-    UnitPrefix(name: "peta", symbol: "P", factor: 15),
-    UnitPrefix(name: "tera", symbol: "T", factor: 12),
-    UnitPrefix(name: "giga", symbol: "G", factor: 9),
-    UnitPrefix(name: "mega", symbol: "M", factor: 6),
-    UnitPrefix(name: "kilo", symbol: "k", factor: 3),
-    UnitPrefix(name: "hecto", symbol: "h", factor: 2),
-    UnitPrefix(name: "deca", symbol: "da", factor: 1),
-    UnitPrefix(name: "", symbol: "", factor: 0),
-    UnitPrefix(name: "deci", symbol: "d", factor: -1),
-    UnitPrefix(name: "centi", symbol: "c", factor: -2),
-    UnitPrefix(name: "milli", symbol: "m", factor: -3),
-    UnitPrefix(name: "micro", symbol: "u", factor: -6),
-    UnitPrefix(name: "micro", symbol: "μ", factor: -6),
-    UnitPrefix(name: "nano", symbol: "n", factor: -9),
-    UnitPrefix(name: "pico", symbol: "p", factor: -12),
-    UnitPrefix(name: "femto", symbol: "f", factor: -15)
+    UnitPrefix(name: "yotta", symbol: "Y", factor: 24, base: 10),
+    UnitPrefix(name: "zetta", symbol: "Z", factor: 21, base: 10),
+    UnitPrefix(name: "exa", symbol: "E", factor: 18, base: 10),
+    UnitPrefix(name: "peta", symbol: "P", factor: 15, base: 10),
+    UnitPrefix(name: "tera", symbol: "T", factor: 12, base: 10),
+    UnitPrefix(name: "giga", symbol: "G", factor: 9, base: 10),
+    UnitPrefix(name: "mega", symbol: "M", factor: 6, base: 10),
+    UnitPrefix(name: "kilo", symbol: "k", factor: 3, base: 10),
+    UnitPrefix(name: "hecto", symbol: "h", factor: 2, base: 10),
+    UnitPrefix(name: "deca", symbol: "da", factor: 1, base: 10),
+    UnitPrefix(name: "", symbol: "", factor: 0, base: 10),
+    UnitPrefix(name: "deci", symbol: "d", factor: -1, base: 10),
+    UnitPrefix(name: "centi", symbol: "c", factor: -2, base: 10),
+    UnitPrefix(name: "milli", symbol: "m", factor: -3, base: 10),
+    UnitPrefix(name: "micro", symbol: "u", factor: -6, base: 10),
+    UnitPrefix(name: "micro", symbol: "μ", factor: -6, base: 10),
+    UnitPrefix(name: "nano", symbol: "n", factor: -9, base: 10),
+    UnitPrefix(name: "pico", symbol: "p", factor: -12, base: 10),
+    UnitPrefix(name: "femto", symbol: "f", factor: -15, base: 10),
+    
+    UnitPrefix(name: "exbi", symbol: "Ei", factor: 60, base: 2),
+    UnitPrefix(name: "pebi", symbol: "Pi", factor: 50, base: 2),
+    UnitPrefix(name: "tebi", symbol: "Ti", factor: 40, base: 2),
+    UnitPrefix(name: "gibi", symbol: "Gi", factor: 30, base: 2),
+    UnitPrefix(name: "mebi", symbol: "Mi", factor: 20, base: 2),
+    UnitPrefix(name: "kibi", symbol: "Ki", factor: 10, base: 2),
 ]
 
 
@@ -330,7 +338,8 @@ func doUnitsConversions(calc: inout [CalcElement]) {
                     for i in 0...old_unit.count-1 {
                         for j in 0...new_unit.count-1 {
                             if old_unit[i].unit.name == new_unit[j].unit.name && old_unit[i].factor == new_unit[j].factor {
-                                new_value *= pow(10, Double((old_unit[i].prefix.factor-new_unit[j].prefix.factor))*new_unit[j].factor)
+                                //new_value *= pow(10, Double((old_unit[i].prefix.factor-new_unit[j].prefix.factor))*new_unit[j].factor)
+                                new_value *= pow((pow(Double(old_unit[i].prefix.base), Double(old_unit[i].prefix.factor))/pow(Double(new_unit[j].prefix.base), Double(new_unit[j].prefix.factor))),Double(new_unit[j].factor))
                             }
                         }
                     }
@@ -357,18 +366,18 @@ func getMultiplicationUnit(_ x: [Unit], _ y: [Unit]) -> ([Unit], Double) {
     var c1 = x
     var c2 = y
     var u: [Unit] = []
-    var factor: Double = 0
+    var f: Double = 1
     if c1.count > 0 && c2.count > 0 {
         for i in 0...c1.count-1 {
             for j in 0...c2.count-1 {
                 if c1[i].unit.name == c2[j].unit.name {
                     if(c1[i].prefix.factor < c2[j].prefix.factor) {
                         c1[i].factor += c2[j].factor
-                        factor += Double(c2[j].prefix.factor-c1[i].prefix.factor)*(y[j].factor)
+                        f *= pow((pow(Double(c2[j].prefix.base),Double(c2[j].prefix.factor))/pow(Double(c1[i].prefix.base),Double(c1[i].prefix.factor))), y[j].factor)
                         u.append(c1[i])
                     } else {
                         c2[j].factor += c1[i].factor
-                        factor += Double(c1[i].prefix.factor-c2[j].prefix.factor)*(x[i].factor)
+                        f *= pow((pow(Double(c1[i].prefix.base),Double(c1[i].prefix.factor))/pow(Double(c2[j].prefix.base),Double(c2[j].prefix.factor))), x[i].factor)
                         u.append(c2[j])
                     }
                 }
@@ -389,7 +398,7 @@ func getMultiplicationUnit(_ x: [Unit], _ y: [Unit]) -> ([Unit], Double) {
             }
         }
     }
-    return (u, factor)
+    return (u, f)
 }
 
 
@@ -397,15 +406,16 @@ func getMultiplicationUnit(_ x: [Unit], _ y: [Unit]) -> ([Unit], Double) {
 // 4m/L
 
 func getAdditionUnit(_ x: [Unit], _ y: [Unit]) -> (Bool, Double) {
-    var factor_x: Double = 0
-    var factor_y: Double = 0
+    var fx: Double = 1
+    var fy: Double = 1
     for u in x {
-        factor_x += u.factor*Double(u.prefix.factor)
+        fx *= pow(pow(Double(u.prefix.base), Double(u.prefix.factor)), u.factor)
     }
     for u in y {
-        factor_y += u.factor*Double(u.prefix.factor)
+        fy *= pow(pow(Double(u.prefix.base), Double(u.prefix.factor)), u.factor)
     }
-    return (factor_x > factor_y, abs(factor_x - factor_y))
+    print(fx, fy)
+    return (fx > fy, (fx > fy) ? fx/fy : fy/fx)
 }
 
 func doUnits(calc: inout [CalcElement]) {
@@ -416,7 +426,7 @@ func doUnits(calc: inout [CalcElement]) {
             && (i == calc.count-1 || (calc[i+1].string != "hex" && calc[i+1].string != "dec" && calc[i+1].string != "bin")){
             let isFirst = calc[i-1].hasValue && calc[i-1].string != "."
             var unit: UnitName = UnitName(name: "null", symbol: "null", hasPrefix: false, canFactor: false)
-            var prefix: UnitPrefix = UnitPrefix(name: "null", symbol: "null", factor: 0)
+            var prefix: UnitPrefix = UnitPrefix(name: "null", symbol: "null", factor: 0, base: 0)
             for u in Units {
                 if calc[i].string.suffix(u.symbol.count) == u.symbol {
                     unit = u

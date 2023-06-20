@@ -135,16 +135,22 @@ func doMultDiv(calc: inout [CalcElement]) {
                 if calc[i].string == "*" {
                     let result = getMultiplicationUnit(calc[i-1].unit, calc[i+1].unit)
                     calc[i-1].unit = result.0
-                    if calc.isInteger && result.1 >= 0 {
+                    if calc.isInteger {
                         let left = calc[i-1].integer
                         let right = calc[i+1].integer
-                        calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left*right, range: calc[i-1].range)
-                        calc[i-1].integer *= Int(pow(10, result.1))
+                        if(floor(result.1) == result.1) {
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: left*right, range: calc[i-1].range)
+                            calc[i-1].integer *= Int(result.1)
+                        } else {
+                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: Double(left*right), range: calc[i-1].range)
+                            calc[i-1].real *= result.1
+                        }
+                        
                     } else {
                         let left = calc[i-1].getDouble
                         let right = calc[i+1].getDouble
                         calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left*right, range: calc[i-1].range)
-                        calc[i-1].real *= pow(10, result.1)
+                        calc[i-1].real *= result.1
                     }
                 } else if calc[i].string == "/" {
                     let result = getMultiplicationUnit(calc[i-1].unit, calc[i+1].unit.map { Unit(unit: $0.unit, prefix: $0.prefix, factor: -$0.factor) })
@@ -154,7 +160,7 @@ func doMultDiv(calc: inout [CalcElement]) {
                     let right = calc[i+1].getDouble
                     if right != 0 {
                         calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: left/right, range: calc[i-1].range)
-                        calc[i-1].real *= pow(10, result.1)
+                        calc[i-1].real *= result.1
                     } else {
                         setError(calc: &calc, error: Constants.DIVIDE_ZERO_ERROR)
                         return
@@ -184,17 +190,21 @@ func doPlusMinus(calc: inout [CalcElement]) {
                         let result = getAdditionUnit(calc[i-1].unit, calc[i+1].unit)
                         if result.0 {
                             final_unit = calc[i+1].unit
-                            x_factor = pow(10, result.1)
+                            x_factor = result.1
                         } else {
                             final_unit = calc[i-1].unit
-                            y_factor = pow(10, result.1)
+                            y_factor = result.1
                         }
                     }
                     if calc[i].string == "+" {
                         if calc.isInteger {
                             let left = calc[i-1].integer
                             let right = calc[i+1].integer
-                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: Int(x_factor)*left+Int(y_factor)*right, range: calc[i-1].range)
+                            if(floor(x_factor) == x_factor && floor(y_factor) == y_factor) {
+                                calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: Int(x_factor)*left+Int(y_factor)*right, range: calc[i-1].range)
+                            } else {
+                                calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: x_factor*Double(left)+y_factor*Double(right), range: calc[i-1].range)
+                            }
                         } else {
                             let left = calc[i-1].getDouble
                             let right = calc[i+1].getDouble
@@ -204,7 +214,11 @@ func doPlusMinus(calc: inout [CalcElement]) {
                         if calc.isInteger {
                             let left = calc[i-1].integer
                             let right = calc[i+1].integer
-                            calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: Int(x_factor)*left-Int(y_factor)*right, range: calc[i-1].range)
+                            if(floor(x_factor) == x_factor && floor(y_factor) == y_factor) {
+                                calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isInteger: true, integer: Int(x_factor)*left-Int(y_factor)*right, range: calc[i-1].range)
+                            } else {
+                                calc[i-1] = CalcElement(string: "", unit: calc[i-1].unit, isReal: true, real: x_factor*Double(left)-y_factor*Double(right), range: calc[i-1].range)
+                            }
                         } else {
                             let left = calc[i-1].getDouble
                             let right = calc[i+1].getDouble

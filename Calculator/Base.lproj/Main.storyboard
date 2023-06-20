@@ -550,7 +550,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="W8g-tW-aGb">
-                                <rect key="frame" x="209" y="72" width="71" height="18"/>
+                                <rect key="frame" x="187" y="72" width="71" height="18"/>
                                 <buttonCell key="cell" type="radio" title="Signed" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="Ihf-qu-ynG">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" size="12" name="FiraCode-Regular"/>
@@ -562,6 +562,7 @@
                         </subviews>
                         <constraints>
                             <constraint firstItem="Kc5-go-hCi" firstAttribute="leading" secondItem="lB6-qa-hAg" secondAttribute="leading" id="6Vd-tW-d97"/>
+                            <constraint firstItem="W8g-tW-aGb" firstAttribute="leading" secondItem="U3C-cl-0et" secondAttribute="leading" id="6jK-ts-xpw"/>
                             <constraint firstItem="DaJ-nu-8d3" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="886-tG-brz"/>
                             <constraint firstItem="W8g-tW-aGb" firstAttribute="top" secondItem="Kc5-go-hCi" secondAttribute="bottom" constant="5" id="BYG-vY-HWl"/>
                             <constraint firstItem="Kc5-go-hCi" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="BtB-eP-1Vi"/>
@@ -570,7 +571,6 @@
                             <constraint firstItem="wML-C8-6B1" firstAttribute="centerY" secondItem="08v-I6-FqV" secondAttribute="centerY" id="IkC-av-VOP"/>
                             <constraint firstItem="1PS-Z7-m7X" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" id="Ltl-EX-ejy"/>
                             <constraint firstItem="1PS-Z7-m7X" firstAttribute="top" secondItem="DaJ-nu-8d3" secondAttribute="bottom" constant="15" id="Og5-Pq-hkB"/>
-                            <constraint firstAttribute="trailing" secondItem="W8g-tW-aGb" secondAttribute="trailing" constant="20" id="P0H-pj-Xbv"/>
                             <constraint firstItem="lB6-qa-hAg" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" symbolic="YES" id="SvA-aP-gq2"/>
                             <constraint firstItem="08v-I6-FqV" firstAttribute="top" secondItem="KzO-h9-6DV" secondAttribute="bottom" constant="30" id="ToT-VN-wsE"/>
                             <constraint firstItem="KzO-h9-6DV" firstAttribute="leading" secondItem="tjm-66-JpT" secondAttribute="leading" constant="20" symbolic="YES" id="U65-Ok-CwP"/>
