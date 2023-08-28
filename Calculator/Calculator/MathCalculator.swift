@@ -341,7 +341,11 @@ func doFunctions(calc: inout [CalcElement]) {       // OUTPUTS DOUBLE MOST OF TH
                 calc[i] = CalcElement(string: "", isReal: true, real: log(fin), range: calc[i].range)
                 calc.remove(at: i+1)
             } else if calc[i].string == "abs"  {
-                calc[i] = CalcElement(string: "", isReal: true, real: abs(fin), range: calc[i].range)
+                if calc[i+1].isInteger {
+                    calc[i] = CalcElement(string: "", isInteger: true, integer: Int(abs(fin)), range: calc[i].range)
+                } else {
+                    calc[i] = CalcElement(string: "", isReal: true, real: abs(fin), range: calc[i].range)
+                }
                 calc.remove(at: i+1)
             } else if calc[i].string == "sinh" {
                 calc[i] = CalcElement(string: "", isReal: true, real: sinh(fin), range: calc[i].range)

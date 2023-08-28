@@ -6,8 +6,8 @@
 //
 
 // TODO: parenthesis in units :(
-// TODO: Gio, Mio, ...
-// TODO: ? functions that can give int as output, give int, not double (abs)
+// TODO: $money for $ as well as money$
+// TODO: save results other than string to be able to use results on other lines (#2 for result[2], #-1 or #+1 for result[i+/-1])
 
 import Cocoa
 import Numerics
@@ -323,6 +323,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 doDotSeparation(calc: &calc)
                 colorInput(calc: &calc, line: l)
                 doComments(calc: &calc, line: l)
+                doAnswers(calc: &calc, line: l)
                 doDoubleOperator(calc: &calc)
                 doPowerSeparation(calc: &calc)
                 removeUseless(calc: &calc)
@@ -513,11 +514,24 @@ class ViewController: NSViewController, NSTextViewDelegate {
     }
     
     
+    func doAnswers(calc: inout[CalcElement], line: Int) {
+        var i = 0;
+        while i < calc.count-1 {
+            if calc[i].string == "#" && calc[i+1].isInteger {
+                if calc[i+1].integer < results.count && calc[i+1].integer != line {
+                    print(results[calc[i+1].integer])
+                }
+            }
+            i += 1
+        }
+    }
+    
+    
     /// Let's the user change settings directly from the calculator by writing settings.xxxx=yyyy
     /// - Parameter calc: calc array
     func doSettings(calc: inout[CalcElement]) {
         var i = 4
-        while i<calc.count {
+        while i < calc.count {
             if calc[i-1].string == "=" && calc[i-3].string == "." && calc[i-4].string == "settings" {
                 if calc[i-2].string == "bits" && calc[i].isInteger {
                     AppVariables.bits = calc[i].integer
@@ -532,7 +546,7 @@ class ViewController: NSViewController, NSTextViewDelegate {
                 }
                 prev_lines = []     // effectively refresh all calcs
             }
-            i+=1
+            i += 1
         }
     }
     
